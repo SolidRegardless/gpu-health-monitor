@@ -28,28 +28,64 @@ The system consists of six major layers:
 5. **Decision Engine**: Economic modeling and lifecycle recommendations
 6. **Interface**: Grafana dashboards, REST API, and alert management
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        GPU Fleet (A100/H100)                     │
-│                    ↓ DCGM (10s intervals)                        │
-└─────────────────────────────────────────────────────────────────┘
-                                ↓
-┌─────────────────────────────────────────────────────────────────┐
-│              Kafka Stream Processing Pipeline                    │
-│        (Validation → Enrichment → Aggregation)                   │
-└─────────────────────────────────────────────────────────────────┘
-                                ↓
-┌─────────────────────────────────────────────────────────────────┐
-│   Storage: TimescaleDB (metrics) + PostgreSQL (assets)           │
-└─────────────────────────────────────────────────────────────────┘
-                                ↓
-┌─────────────────────────────────────────────────────────────────┐
-│   Analytics: Health Scoring + Failure Prediction + Economics     │
-└─────────────────────────────────────────────────────────────────┘
-                                ↓
-┌─────────────────────────────────────────────────────────────────┐
-│      Interface: Grafana + REST API + Alerts                      │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph "GPU Fleet"
+        GPU[A100/H100 GPUs<br/>DCGM Exporters<br/>10s intervals]
+    end
+    
+    subgraph "Stream Processing"
+        Kafka[Kafka Pipeline]
+        Validate[Validation]
+        Enrich[Enrichment]
+        Aggregate[Aggregation]
+    end
+    
+    subgraph "Storage Layer"
+        TSDB[(TimescaleDB<br/>Time-Series Metrics)]
+        PG[(PostgreSQL<br/>Assets & Metadata)]
+    end
+    
+    subgraph "Analytics Layer"
+        Health[Health Scoring<br/>Multi-dimensional]
+        Predict[Failure Prediction<br/>XGBoost/LSTM]
+        Economic[Economic Engine<br/>Lifecycle Decisions]
+    end
+    
+    subgraph "Interface Layer"
+        Grafana[Grafana Dashboards]
+        API[REST API]
+        Alerts[Alert Manager]
+    end
+    
+    GPU --> Kafka
+    Kafka --> Validate
+    Validate --> Enrich
+    Enrich --> Aggregate
+    
+    Aggregate --> TSDB
+    Aggregate --> PG
+    
+    TSDB --> Health
+    PG --> Health
+    TSDB --> Predict
+    PG --> Predict
+    
+    Health --> Economic
+    Predict --> Economic
+    
+    TSDB --> Grafana
+    Health --> Grafana
+    Economic --> API
+    Health --> API
+    Predict --> Alerts
+    
+    style GPU fill:#e1f5ff
+    style TSDB fill:#fff4e1
+    style PG fill:#fff4e1
+    style Health fill:#e8f5e9
+    style Predict fill:#e8f5e9
+    style Economic fill:#f3e5f5
 ```
 
 ## Documentation
@@ -104,6 +140,44 @@ python economic_model.py
 
 GPUs receive a multi-dimensional health score (0-100) based on:
 
+```mermaid
+graph LR
+    subgraph "Health Dimensions"
+        M[Memory Health<br/>30%<br/>━━━━━━━━━━<br/>ECC Errors<br/>Bandwidth]
+        T[Thermal Health<br/>25%<br/>━━━━━━━━<br/>Temperature<br/>Throttling]
+        Perf[Performance<br/>20%<br/>━━━━━━<br/>Throughput<br/>Clock Stability]
+        P[Power Health<br/>15%<br/>━━━━<br/>Draw Variance<br/>Violations]
+        R[Reliability<br/>10%<br/>━━<br/>Uptime<br/>Job Success]
+    end
+    
+    M --> Overall[Overall<br/>Health Score<br/>0-100]
+    T --> Overall
+    Perf --> Overall
+    P --> Overall
+    R --> Overall
+    
+    Overall --> Decision{Score?}
+    Decision -->|90-100| Excellent[Excellent<br/>Prime Production]
+    Decision -->|80-89| Good[Good<br/>Standard Production]
+    Decision -->|70-79| Fair[Fair<br/>Monitor Closely]
+    Decision -->|60-69| Degraded[Degraded<br/>Plan Replacement]
+    Decision -->|50-59| Poor[Poor<br/>Secondary Market]
+    Decision -->|< 50| Critical[Critical<br/>Decommission]
+    
+    style M fill:#e3f2fd
+    style T fill:#fff3e0
+    style Perf fill:#f3e5f5
+    style P fill:#e8f5e9
+    style R fill:#fce4ec
+    style Overall fill:#fff9c4
+    style Excellent fill:#c8e6c9
+    style Good fill:#a5d6a7
+    style Fair fill:#fff59d
+    style Degraded fill:#ffcc80
+    style Poor fill:#ffab91
+    style Critical fill:#ef9a9a
+```
+
 | Dimension | Weight | Key Metrics |
 |-----------|--------|-------------|
 | **Memory Health** | 30% | ECC errors (correctable/uncorrectable), bandwidth |
@@ -125,20 +199,117 @@ GPUs receive a multi-dimensional health score (0-100) based on:
 
 The system uses ensemble machine learning models to predict failures:
 
-- **XGBoost Classifier**: Binary failure prediction (30-day window)
-- **LSTM Sequence Model**: Time-series pattern recognition
-- **Isolation Forest**: Anomaly detection for novel failure modes
-- **Survival Analysis**: Time-to-failure estimation
+```mermaid
+graph TB
+    subgraph "Training Data"
+        Failures[Historical Failures<br/>Labeled Events]
+        Telemetry[Pre-Failure Telemetry<br/>6 months window]
+        Healthy[Healthy GPUs<br/>Control Set]
+    end
+    
+    subgraph "Feature Engineering"
+        Features[200+ Features]
+        TS[Time-Series Stats<br/>Rolling Windows]
+        Trend[Trend Analysis<br/>Derivatives]
+        Anomaly[Anomaly Counts<br/>Frequency]
+    end
+    
+    subgraph "ML Model Ensemble"
+        XGB[XGBoost<br/>Binary Classifier<br/>━━━━━━━━━━<br/>30-day failure risk]
+        LSTM[LSTM Network<br/>Sequence Model<br/>━━━━━━━━━━<br/>Pattern recognition]
+        IF[Isolation Forest<br/>Anomaly Detector<br/>━━━━━━━━━━<br/>Novel failure modes]
+        SA[Survival Analysis<br/>Cox Model<br/>━━━━━━━━━━<br/>Time-to-failure]
+    end
+    
+    subgraph "Predictions"
+        Prob[Failure Probability<br/>7/30/90 days]
+        Type[Failure Type<br/>Memory/Thermal/Power]
+        TTF[Time to Failure<br/>Days estimate]
+        Conf[Confidence Level<br/>0-100%]
+    end
+    
+    Failures --> Features
+    Telemetry --> Features
+    Healthy --> Features
+    
+    Features --> TS
+    Features --> Trend
+    Features --> Anomaly
+    
+    TS --> XGB
+    Trend --> XGB
+    TS --> LSTM
+    Anomaly --> IF
+    TS --> SA
+    
+    XGB --> Prob
+    XGB --> Conf
+    LSTM --> Type
+    IF --> Type
+    SA --> TTF
+    
+    style Failures fill:#ffcdd2
+    style Telemetry fill:#e1f5ff
+    style Healthy fill:#c8e6c9
+    style XGB fill:#fff3e0
+    style LSTM fill:#f3e5f5
+    style IF fill:#e8f5e9
+    style SA fill:#fff9c4
+    style Prob fill:#ffcc80
+```
 
-**Target Accuracy:**
-- 7-day predictions: >95% accuracy
-- 30-day predictions: >85% accuracy
-- 90-day predictions: >70% accuracy
+**Model Performance Targets:**
+- 7-day predictions: >95% accuracy, <2% false positive rate
+- 30-day predictions: >85% accuracy, <5% false positive rate
+- 90-day predictions: >70% accuracy, <10% false positive rate
 
 ## Economic Decision Engine
 
-Data-driven lifecycle recommendations based on:
+Data-driven lifecycle recommendations based on Net Present Value (NPV) analysis:
 
+```mermaid
+graph TD
+    Start[GPU Health<br/>Assessment] --> Inputs[Collect Inputs]
+    
+    Inputs --> Health[Health Score<br/>Risk Level<br/>Predicted Lifetime]
+    Inputs --> Market[Market Conditions<br/>Pricing Data<br/>Demand]
+    Inputs --> Costs[Operational Costs<br/>Power, Cooling<br/>Maintenance]
+    
+    Health --> Calc1[Calculate NPV Keep]
+    Market --> Calc1
+    Costs --> Calc1
+    Calc1 --> Keep["NPV(Keep)<br/>= Revenue(12m) - OpCost(12m)"]
+    
+    Health --> Calc2[Calculate NPV Sell]
+    Market --> Calc2
+    Calc2 --> Sell["NPV(Sell)<br/>= Residual Value - Transaction Cost"]
+    
+    Health --> Calc3[Calculate NPV Repurpose]
+    Costs --> Calc3
+    Calc3 --> Repurpose["NPV(Repurpose)<br/>= Revenue(Low) - Cost(Reduced)"]
+    
+    Health --> Calc4[Calculate Salvage]
+    Calc4 --> Salvage["Salvage Value<br/>= Components + Scrap"]
+    
+    Keep --> Decision{Max NPV?}
+    Sell --> Decision
+    Repurpose --> Decision
+    Salvage --> Decision
+    
+    Decision -->|Highest| Recommend[Recommendation<br/>+ Expected Value<br/>+ Timeline<br/>+ Confidence]
+    
+    style Start fill:#e3f2fd
+    style Health fill:#fff3e0
+    style Market fill:#f3e5f5
+    style Costs fill:#e8f5e9
+    style Keep fill:#c8e6c9
+    style Sell fill:#fff59d
+    style Repurpose fill:#ffcc80
+    style Salvage fill:#ef9a9a
+    style Recommend fill:#fff9c4
+```
+
+**Economic Formulas:**
 ```
 NPV(Keep) = Revenue_Potential(12m) - Operational_Cost(12m)
 NPV(Sell) = Residual_Value - Transaction_Cost
