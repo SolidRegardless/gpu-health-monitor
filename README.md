@@ -1,9 +1,19 @@
-# GPU Health Monitor
+<div align="center">
+  <img src="banner.png" alt="GPU Health Monitor Banner" width="100%">
+</div>
 
-**Production-grade health monitoring and predictive fault management system for NVIDIA A100/H100 GPU fleets**
+<br>
+
+<div align="center">
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+
+</div>
+
+# GPU Health Monitor
+
+**Production-grade health monitoring and predictive fault management system for NVIDIA A100/H100 GPU fleets**
 
 ## Overview
 
