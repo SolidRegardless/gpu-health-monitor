@@ -115,6 +115,28 @@ graph TB
     I2 --> D1
     I2 --> D2
     I3 --> D2
+    
+    style GPU1 fill:#e1f5ff
+    style GPU2 fill:#e1f5ff
+    style GPU3 fill:#e1f5ff
+    style T1 fill:#b3e5fc
+    style T2 fill:#b3e5fc
+    style T3 fill:#b3e5fc
+    style S1 fill:#fff4e1
+    style S2 fill:#fff4e1
+    style S3 fill:#fff4e1
+    style A1 fill:#e8f5e9
+    style A2 fill:#e8f5e9
+    style A3 fill:#e8f5e9
+    style A4 fill:#e8f5e9
+    style D1 fill:#f3e5f5
+    style D2 fill:#f3e5f5
+    style D3 fill:#f3e5f5
+    style D4 fill:#f3e5f5
+    style I1 fill:#fff9c4
+    style I2 fill:#fff9c4
+    style I3 fill:#fff9c4
+    style I4 fill:#fff9c4
 ```
 
 ### Key Design Principles
@@ -161,6 +183,16 @@ graph LR
     Enricher --> Validator
     Validator --> Buffer
     Buffer --> Kafka
+    
+    style DCGM fill:#e1f5ff
+    style NVML fill:#e1f5ff
+    style IPMI fill:#e1f5ff
+    style Custom fill:#e1f5ff
+    style Scraper fill:#b3e5fc
+    style Enricher fill:#b3e5fc
+    style Validator fill:#b3e5fc
+    style Buffer fill:#b3e5fc
+    style Kafka fill:#fff3e0
 ```
 
 **Responsibilities:**
@@ -219,6 +251,18 @@ graph LR
     W --> TSDB
     E --> RDBMS
     Alerts --> Alert
+    
+    style Raw fill:#e1f5ff
+    style Validated fill:#b3e5fc
+    style Enriched fill:#81d4fa
+    style Alerts fill:#ffcdd2
+    style V fill:#c8e6c9
+    style E fill:#c8e6c9
+    style A fill:#c8e6c9
+    style W fill:#c8e6c9
+    style TSDB fill:#fff4e1
+    style RDBMS fill:#fff4e1
+    style Alert fill:#ffcc80
 ```
 
 **Processing Pipeline:**
@@ -297,6 +341,21 @@ graph TB
     
     Overall --> Trend
     Overall --> Risk
+    
+    style M1 fill:#e1f5ff
+    style M2 fill:#e1f5ff
+    style M3 fill:#e1f5ff
+    style M4 fill:#e1f5ff
+    style M5 fill:#e1f5ff
+    style M6 fill:#e1f5ff
+    style S1 fill:#fff3e0
+    style S2 fill:#e3f2fd
+    style S3 fill:#e8f5e9
+    style S4 fill:#f3e5f5
+    style S5 fill:#fce4ec
+    style Overall fill:#fff9c4
+    style Trend fill:#c8e6c9
+    style Risk fill:#ffcc80
 ```
 
 **Health Score Calculation:**
@@ -355,6 +414,19 @@ graph TB
     M2 --> P2
     M3 --> P3
     M1 --> P4
+    
+    style F1 fill:#e1f5ff
+    style F2 fill:#e1f5ff
+    style F3 fill:#e1f5ff
+    style F4 fill:#e1f5ff
+    style M1 fill:#fff3e0
+    style M2 fill:#f3e5f5
+    style M3 fill:#e8f5e9
+    style M4 fill:#fff9c4
+    style P1 fill:#ffcc80
+    style P2 fill:#ffcc80
+    style P3 fill:#ffcc80
+    style P4 fill:#ffcc80
 ```
 
 **Predictive Features (Top 50):**
@@ -430,6 +502,24 @@ graph TB
     D4 --> R1
     
     D1 --> R2
+    
+    style I1 fill:#e1f5ff
+    style I2 fill:#e1f5ff
+    style I3 fill:#e1f5ff
+    style I4 fill:#e1f5ff
+    style I5 fill:#e1f5ff
+    style V1 fill:#fff3e0
+    style V2 fill:#fff3e0
+    style V3 fill:#fff3e0
+    style V4 fill:#fff3e0
+    style D1 fill:#f3e5f5
+    style D2 fill:#f3e5f5
+    style D3 fill:#f3e5f5
+    style D4 fill:#f3e5f5
+    style R1 fill:#c8e6c9
+    style R2 fill:#c8e6c9
+    style R3 fill:#c8e6c9
+    style R4 fill:#c8e6c9
 ```
 
 **Economic Decision Logic:**
@@ -702,6 +792,13 @@ graph LR
     H3 --> Overall
     H4 --> Overall
     H5 --> Overall
+    
+    style H1 fill:#fff3e0
+    style H2 fill:#e3f2fd
+    style H3 fill:#e8f5e9
+    style H4 fill:#f3e5f5
+    style H5 fill:#fce4ec
+    style Overall fill:#fff9c4
 ```
 
 ### 1. Thermal Health (25%)
@@ -1035,6 +1132,23 @@ graph TD
     SellTimed --> Liquidity
     Repurpose --> Optimize[Optimize Asset Use]
     Decom --> Minimize[Minimize Loss]
+    
+    style Start fill:#e3f2fd
+    style Q1 fill:#fff3e0
+    style Q2 fill:#fff3e0
+    style Q3 fill:#fff3e0
+    style Q4 fill:#fff3e0
+    style Q5 fill:#fff3e0
+    style Keep fill:#c8e6c9
+    style KeepMed fill:#c8e6c9
+    style SellNow fill:#fff59d
+    style SellTimed fill:#fff59d
+    style Repurpose fill:#ffcc80
+    style Decom fill:#ef9a9a
+    style Revenue fill:#a5d6a7
+    style Liquidity fill:#ffe082
+    style Optimize fill:#ffb74d
+    style Minimize fill:#e57373
 ```
 
 ### Economic Model Components
@@ -1399,6 +1513,25 @@ graph TB
     Econ --> Backend
     Backend --> API
     API --> Frontend
+    
+    style GPU1 fill:#e1f5ff
+    style GPU2 fill:#e1f5ff
+    style Agent1 fill:#b3e5fc
+    style Agent2 fill:#b3e5fc
+    style Kafka1 fill:#81d4fa
+    style Kafka2 fill:#81d4fa
+    style KafkaC fill:#fff3e0
+    style Stream fill:#c8e6c9
+    style TSDB fill:#fff4e1
+    style PG fill:#fff4e1
+    style S3 fill:#fff4e1
+    style Health fill:#e8f5e9
+    style Predict fill:#e8f5e9
+    style Econ fill:#f3e5f5
+    style API fill:#fff9c4
+    style Backend fill:#fff9c4
+    style Frontend fill:#fff9c4
+    style Alerts fill:#ffcc80
 ```
 
 ---
@@ -1613,6 +1746,18 @@ graph TB
     TSDB --> Grafana
     Health --> Grafana
     ML --> Jupyter
+    
+    style GPUs fill:#e1f5ff
+    style DCGM fill:#b3e5fc
+    style Kafka fill:#fff3e0
+    style TSDB fill:#fff4e1
+    style PG fill:#fff4e1
+    style Redis fill:#fff4e1
+    style Stream fill:#c8e6c9
+    style Health fill:#e8f5e9
+    style ML fill:#f3e5f5
+    style Grafana fill:#fff9c4
+    style Jupyter fill:#fff9c4
 ```
 
 ### POC Deliverables
