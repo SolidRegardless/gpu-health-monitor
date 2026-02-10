@@ -419,7 +419,7 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) file for
 
 For questions or support:
 - Open an issue on GitHub
-- Email: support@example.com
+- Email: stuarthart@msn.com
 - Documentation: [Full System Architecture](gpu-health-system-architecture.md)
 
 ## Acknowledgments
