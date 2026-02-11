@@ -1,4 +1,15 @@
-# TODO: Implement validator processor
 FROM python:3.11-slim
+
 WORKDIR /app
-CMD ["echo", "Validator processor not yet implemented"]
+
+# Copy requirements
+COPY requirements.txt .
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application
+COPY validator.py .
+
+# Run the validator
+CMD ["python", "-u", "validator.py"]

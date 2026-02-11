@@ -1,4 +1,15 @@
-# TODO: Implement enricher processor
 FROM python:3.11-slim
+
 WORKDIR /app
-CMD ["echo", "Enricher processor not yet implemented"]
+
+# Copy requirements
+COPY requirements.txt .
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application
+COPY enricher.py .
+
+# Run the enricher
+CMD ["python", "-u", "enricher.py"]
