@@ -1,0 +1,241 @@
+version: '3.8'
+
+services:
+  # =========================
+  # Message Queue (Kafka)
+  # =========================
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    hostname: zookeeper
+    container_name: gpu-monitor-zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data
+      - zookeeper-logs:/var/lib/zookeeper/log
+    networks:
+      - gpu-monitor-net
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    hostname: kafka
+    container_name: gpu-monitor-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_LOG_RETENTION_HOURS: 168  # 7 days
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824  # 1GB
+      KAFKA_COMPRESSION_TYPE: snappy
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    networks:
+      - gpu-monitor-net
+
+  # =========================
+  # Databases
+  # =========================
+  timescaledb:
+    image: timescale/timescaledb:latest-pg15
+    hostname: timescaledb
+    container_name: gpu-monitor-timescaledb
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: gpu_health
+      POSTGRES_USER: gpu_monitor
+      POSTGRES_PASSWORD: gpu_monitor_secret
+      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+    volumes:
+      - timescaledb-data:/var/lib/postgresql/data
+      - ../schema:/docker-entrypoint-initdb.d
+    networks:
+      - gpu-monitor-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gpu_monitor -d gpu_health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # =========================
+  # Monitoring & Visualization
+  # =========================
+  grafana:
+    image: grafana/grafana:latest
+    hostname: grafana
+    container_name: gpu-monitor-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_INSTALL_PLUGINS: ""
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ../config/grafana:/etc/grafana/provisioning
+    depends_on:
+      - timescaledb
+    networks:
+      - gpu-monitor-net
+
+  # =========================
+  # Application Services
+  # =========================
+  mock-dcgm:
+    build:
+      context: ../src/mock-dcgm
+      dockerfile: Dockerfile
+    hostname: mock-dcgm
+    container_name: gpu-monitor-mock-dcgm
+    ports:
+      - "9400:9400"  # Prometheus exporter format endpoint
+    environment:
+      GPU_UUID: "GPU-abc123def456"
+      GPU_MODEL: "NVIDIA A100-SXM4-80GB"
+      POLL_INTERVAL: 10
+      EXPORTER_PORT: 9400
+    networks:
+      - gpu-monitor-net
+
+  collector:
+    build:
+      context: ../src/collector
+      dockerfile: Dockerfile
+    hostname: collector
+    container_name: gpu-monitor-collector
+    depends_on:
+      - kafka
+      - mock-dcgm
+    environment:
+      DCGM_ENDPOINT: "http://mock-dcgm:9400/metrics"
+      KAFKA_BROKERS: "kafka:9092"
+      KAFKA_TOPIC: "gpu-metrics-raw"
+      COLLECTION_INTERVAL: 10
+      CLUSTER_NAME: "local-development"
+      DATACENTER: "local"
+    networks:
+      - gpu-monitor-net
+
+  validator:
+    build:
+      context: ../src/processors
+      dockerfile: Dockerfile.validator
+    hostname: validator
+    container_name: gpu-monitor-validator
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BROKERS: "kafka:9092"
+      KAFKA_INPUT_TOPIC: "gpu-metrics-raw"
+      KAFKA_OUTPUT_TOPIC: "gpu-metrics-validated"
+      KAFKA_ERROR_TOPIC: "gpu-metrics-invalid"
+      KAFKA_GROUP_ID: "metric-validator"
+    networks:
+      - gpu-monitor-net
+
+  enricher:
+    build:
+      context: ../src/processors
+      dockerfile: Dockerfile.enricher
+    hostname: enricher
+    container_name: gpu-monitor-enricher
+    depends_on:
+      - kafka
+      - timescaledb
+    environment:
+      KAFKA_BROKERS: "kafka:9092"
+      KAFKA_INPUT_TOPIC: "gpu-metrics-validated"
+      KAFKA_OUTPUT_TOPIC: "gpu-metrics-enriched"
+      KAFKA_GROUP_ID: "metric-enricher"
+      DB_HOST: "timescaledb"
+      DB_PORT: "5432"
+      DB_NAME: "gpu_health"
+      DB_USER: "gpu_monitor"
+      DB_PASSWORD: "gpu_monitor_secret"
+    networks:
+      - gpu-monitor-net
+
+  timescale-sink:
+    build:
+      context: ../src/processors
+      dockerfile: Dockerfile.sink
+    hostname: timescale-sink
+    container_name: gpu-monitor-timescale-sink
+    depends_on:
+      - kafka
+      - timescaledb
+    environment:
+      KAFKA_BROKERS: "kafka:9092"
+      KAFKA_INPUT_TOPIC: "gpu-metrics-enriched"
+      KAFKA_GROUP_ID: "timescale-sink"
+      DB_HOST: "timescaledb"
+      DB_PORT: "5432"
+      DB_NAME: "gpu_health"
+      DB_USER: "gpu_monitor"
+      DB_PASSWORD: "gpu_monitor_secret"
+      BATCH_SIZE: 1000
+      BATCH_TIMEOUT: 5
+    networks:
+      - gpu-monitor-net
+
+  health-scorer:
+    build:
+      context: ../src/health-scorer
+      dockerfile: Dockerfile
+    hostname: health-scorer
+    container_name: gpu-monitor-health-scorer
+    depends_on:
+      - timescaledb
+    environment:
+      DB_HOST: "timescaledb"
+      DB_PORT: "5432"
+      DB_NAME: "gpu_health"
+      DB_USER: "gpu_monitor"
+      DB_PASSWORD: "gpu_monitor_secret"
+      SCORING_INTERVAL: 900  # 15 minutes
+    networks:
+      - gpu-monitor-net
+
+  api:
+    build:
+      context: ../src/api
+      dockerfile: Dockerfile
+    hostname: api
+    container_name: gpu-monitor-api
+    ports:
+      - "8000:8000"
+    depends_on:
+      - timescaledb
+    environment:
+      DB_HOST: "timescaledb"
+      DB_PORT: "5432"
+      DB_NAME: "gpu_health"
+      DB_USER: "gpu_monitor"
+      DB_PASSWORD: "gpu_monitor_secret"
+    networks:
+      - gpu-monitor-net
+
+volumes:
+  zookeeper-data:
+  zookeeper-logs:
+  kafka-data:
+  timescaledb-data:
+  grafana-data:
+
+networks:
+  gpu-monitor-net:
+    driver: bridge

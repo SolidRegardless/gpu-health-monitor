@@ -1,0 +1,4 @@
+# TODO: Implement validator processor
+FROM python:3.11-slim
+WORKDIR /app
+CMD ["echo", "Validator processor not yet implemented"]
