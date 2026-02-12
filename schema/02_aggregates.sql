@@ -35,11 +35,13 @@ SELECT
 FROM gpu_metrics
 GROUP BY time_bucket('1 minute', time), gpu_uuid, hostname;
 
--- Enable automatic refresh policy (refresh every minute, keep last 7 days)
+-- Enable automatic refresh policy
+-- end_offset = 10 seconds: Allow near-real-time data (we collect every 10s)
+-- schedule_interval = 30 seconds: Responsive without excessive overhead
 SELECT add_continuous_aggregate_policy('gpu_metrics_1min',
     start_offset => INTERVAL '7 days',
-    end_offset => INTERVAL '1 minute',
-    schedule_interval => INTERVAL '1 minute',
+    end_offset => INTERVAL '10 seconds',
+    schedule_interval => INTERVAL '30 seconds',
     if_not_exists => TRUE);
 
 -- 5-minute aggregates
@@ -68,10 +70,12 @@ FROM gpu_metrics
 GROUP BY time_bucket('5 minutes', time), gpu_uuid, hostname;
 
 -- Enable automatic refresh policy
+-- end_offset = 30 seconds: Near-real-time for 5-min buckets
+-- schedule_interval = 1 minute: Catches new buckets quickly
 SELECT add_continuous_aggregate_policy('gpu_metrics_5min',
     start_offset => INTERVAL '30 days',
-    end_offset => INTERVAL '5 minutes',
-    schedule_interval => INTERVAL '5 minutes',
+    end_offset => INTERVAL '30 seconds',
+    schedule_interval => INTERVAL '1 minute',
     if_not_exists => TRUE);
 
 -- 1-hour aggregates
@@ -100,10 +104,12 @@ FROM gpu_metrics
 GROUP BY time_bucket('1 hour', time), gpu_uuid, hostname;
 
 -- Enable automatic refresh policy
+-- end_offset = 5 minutes: Sufficient for hourly buckets
+-- schedule_interval = 10 minutes: Balances freshness with overhead
 SELECT add_continuous_aggregate_policy('gpu_metrics_1hour',
     start_offset => INTERVAL '90 days',
-    end_offset => INTERVAL '1 hour',
-    schedule_interval => INTERVAL '1 hour',
+    end_offset => INTERVAL '5 minutes',
+    schedule_interval => INTERVAL '10 minutes',
     if_not_exists => TRUE);
 
 -- Create indexes for faster queries
