@@ -134,20 +134,60 @@ Your system currently uses **pre-trained models** loaded from pickle files:
 
 ## 🏗️ Database Architecture Summary
 
+```mermaid
+graph TB
+    subgraph "gpu_health Database"
+        subgraph "Core Application Tables (8)"
+            Assets[gpu_assets<br/>Inventory]
+            Metrics[gpu_metrics<br/>Time-series Hypertable<br/>⚡ 10s intervals]
+            Health[gpu_health_scores<br/>Every 15min]
+            Features[gpu_features<br/>ML Features<br/>Every 5min]
+            Predictions[gpu_failure_predictions<br/>ML Predictions<br/>Every 5min]
+            Economic[gpu_economic_decisions<br/>NPV Analysis<br/>Every 30min]
+            Anomalies[anomalies<br/>Real-time Detection]
+            Labels[gpu_failure_labels<br/>Ground Truth<br/>Empty]
+        end
+        
+        subgraph "MLflow Tables (15)"
+            Experiments[experiments<br/>runs<br/>metrics<br/>params<br/>tags]
+            Registry[registered_models<br/>model_versions<br/>model_version_tags]
+            Datasets[datasets<br/>inputs<br/>input_tags]
+            Other[experiment_tags<br/>alembic_version]
+        end
+    end
+    
+    Assets --> Metrics
+    Metrics --> Health
+    Metrics --> Features
+    Features --> Predictions
+    Health --> Economic
+    Predictions --> Economic
+    Metrics --> Anomalies
+    
+    style Assets fill:#4caf50,color:#fff
+    style Metrics fill:#2196f3,color:#fff
+    style Health fill:#ff9800,color:#fff
+    style Features fill:#9c27b0,color:#fff
+    style Predictions fill:#f44336,color:#fff
+    style Economic fill:#00bcd4,color:#fff
+    style Anomalies fill:#ffeb3b,color:#000
+    style Labels fill:#9e9e9e,color:#fff
+    
+    style Experiments fill:#e0e0e0,color:#000
+    style Registry fill:#e0e0e0,color:#000
+    style Datasets fill:#e0e0e0,color:#000
+    style Other fill:#e0e0e0,color:#000
 ```
-gpu_health database (PostgreSQL + TimescaleDB)
-│
-├── GPU Health Monitor Schema (8 tables)
-│   ├── gpu_assets (inventory)
-│   ├── gpu_metrics (time-series hypertable) ⚡ High frequency
-│   ├── gpu_health_scores
-│   ├── gpu_features
-│   ├── gpu_failure_predictions
-│   ├── gpu_economic_decisions
-│   ├── anomalies
-│   └── gpu_failure_labels
-│
-└── MLflow Schema (15 tables)
+
+**Logical Flow:**
+1. `gpu_assets` → Static inventory
+2. `gpu_metrics` → Raw telemetry stream (10s intervals)
+3. `gpu_health_scores` → Health assessment (15min intervals)
+4. `gpu_features` → ML feature extraction (5min intervals)
+5. `gpu_failure_predictions` → Failure forecasts (5min intervals)
+6. `gpu_economic_decisions` → NPV-based recommendations (30min intervals)
+7. `anomalies` → Real-time anomaly detection
+8. `gpu_failure_labels` → Ground truth for training (currently empty)
     ├── Experiment Tracking (experiments, runs, metrics, params, tags)
     ├── Model Registry (registered_models, model_versions, aliases)
     ├── Dataset Tracking (datasets, inputs, input_tags)

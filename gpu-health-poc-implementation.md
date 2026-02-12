@@ -25,6 +25,38 @@ This document provides step-by-step implementation instructions for the 6-week p
 
 ---
 
+## 📅 Implementation Timeline
+
+```mermaid
+gantt
+    title 6-Week POC Implementation Timeline
+    dateFormat YYYY-MM-DD
+    section Week 1-2
+    Hardware & Network Setup           :done, w1a, 2026-02-09, 2d
+    Core Infrastructure (Kafka, DB)    :done, w1b, 2026-02-11, 2d
+    DCGM Exporter Deployment          :done, w2a, 2026-02-13, 2d
+    Data Pipeline Testing             :done, w2b, 2026-02-15, 2d
+    section Week 3-4
+    Health Score Definition           :active, w3a, 2026-02-17, 3d
+    Health Scoring Engine            :active, w3b, 2026-02-20, 4d
+    Initial Validation               :w4a, 2026-02-24, 3d
+    section Week 5
+    Feature Engineering              :w5a, 2026-02-27, 3d
+    Risk Score Model                :w5b, 2026-03-02, 4d
+    section Week 6
+    Economic Model                  :w6a, 2026-03-06, 3d
+    Dashboard & Reporting           :w6b, 2026-03-09, 2d
+    POC Review & Documentation      :milestone, 2026-03-11, 0d
+```
+
+**Phase Breakdown:**
+- **Weeks 1-2**: Infrastructure & Data Pipeline (Foundation)
+- **Weeks 3-4**: Health Scoring System (Core Capability)
+- **Week 5**: Predictive Analytics (Value Demonstration)
+- **Week 6**: Economic Model & Reporting (Business Case)
+
+---
+
 ## Week 1: Infrastructure Setup
 
 ### Day 1-2: Hardware & Network Preparation
