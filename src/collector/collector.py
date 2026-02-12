@@ -194,12 +194,24 @@ class DCGMCollector:
                     'tensor_active_pct': metrics.get('DCGM_FI_PROF_PIPE_TENSOR_ACTIVE', 0),
                     'dram_active_pct': metrics.get('DCGM_FI_PROF_DRAM_ACTIVE', 0),
                     'pcie_tx_mb_per_sec': metrics.get('DCGM_FI_PROF_PCIE_TX_BYTES', 0) / (1024 * 1024),
-                    'pcie_rx_mb_per_sec': metrics.get('DCGM_FI_PROF_PCIE_RX_BYTES', 0) / (1024 * 1024)
+                    'pcie_rx_mb_per_sec': metrics.get('DCGM_FI_PROF_PCIE_RX_BYTES', 0) / (1024 * 1024),
+                    'nvlink_tx_mb_per_sec': metrics.get('DCGM_FI_PROF_NVLINK_TX_BYTES', 0) / (1024 * 1024),
+                    'nvlink_rx_mb_per_sec': metrics.get('DCGM_FI_PROF_NVLINK_RX_BYTES', 0) / (1024 * 1024),
+                    'gpu_utilization_pct': metrics.get('DCGM_FI_DEV_GPU_UTIL', 0),
+                    'memory_copy_utilization_pct': metrics.get('DCGM_FI_DEV_MEM_COPY_UTIL', 0)
                 },
                 
                 'clocks': {
                     'sm_clock_mhz': int(metrics.get('DCGM_FI_DEV_SM_CLOCK', 0)),
                     'mem_clock_mhz': int(metrics.get('DCGM_FI_DEV_MEM_CLOCK', 0))
+                },
+                
+                'cooling': {
+                    'fan_speed_pct': metrics.get('DCGM_FI_DEV_FAN_SPEED', 0)
+                },
+                
+                'energy': {
+                    'total_energy_consumption_mj': int(metrics.get('DCGM_FI_DEV_TOTAL_ENERGY_CONSUMPTION', 0))
                 }
             },
             

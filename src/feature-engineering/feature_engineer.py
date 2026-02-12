@@ -93,7 +93,7 @@ class GPUFeatureEngineer:
                     raise
     
     def query_metrics(self, gpu_uuid: str, lookback_days: int = 7) -> pd.DataFrame:
-        """Query raw metrics for a GPU."""
+        """Query raw metrics for a GPU including enhanced telemetry."""
         cursor = self.db_conn.cursor()
         
         lookback = datetime.now() - timedelta(days=lookback_days)
@@ -111,7 +111,18 @@ class GPUFeatureEngineer:
                 memory_utilization,
                 ecc_sbe_volatile,
                 ecc_dbe_volatile,
-                gpu_utilization
+                ecc_sbe_aggregate,
+                ecc_dbe_aggregate,
+                gpu_utilization,
+                memory_copy_utilization,
+                sm_clock,
+                memory_clock,
+                pcie_tx_throughput,
+                pcie_rx_throughput,
+                nvlink_tx_throughput,
+                nvlink_rx_throughput,
+                fan_speed,
+                total_energy_consumption
             FROM gpu_metrics
             WHERE gpu_uuid = %s
               AND time >= %s
@@ -165,6 +176,9 @@ class GPUFeatureEngineer:
         
         # Anomaly features
         features.update(self._anomaly_features(metrics))
+        
+        # Enhanced telemetry features
+        features.update(self._enhanced_telemetry_features(metrics))
         
         # Metadata features
         features.update(self._metadata_features(asset))
@@ -262,6 +276,133 @@ class GPUFeatureEngineer:
         # Assuming 10s sampling interval
         throttle_events = (metrics['throttle_reasons'] > 0).sum()
         features['throttle_duration_hours'] = (throttle_events * 10) / 3600.0
+        
+        return features
+    
+    def _enhanced_telemetry_features(self, metrics: pd.DataFrame) -> dict:
+        """Extract features from enhanced telemetry signals."""
+        features = {}
+        
+        # Fan speed features
+        if 'fan_speed' in metrics.columns and metrics['fan_speed'].notna().any():
+            features['fan_speed_mean'] = metrics['fan_speed'].mean()
+            features['fan_speed_max'] = metrics['fan_speed'].max()
+            features['fan_speed_std'] = metrics['fan_speed'].std()
+            
+            # High fan speed events (>80%)
+            features['high_fan_speed_pct'] = (metrics['fan_speed'] > 80).sum() / len(metrics) * 100
+        else:
+            features['fan_speed_mean'] = 0.0
+            features['fan_speed_max'] = 0.0
+            features['fan_speed_std'] = 0.0
+            features['high_fan_speed_pct'] = 0.0
+        
+        # Clock frequency features
+        if 'sm_clock' in metrics.columns and metrics['sm_clock'].notna().any():
+            features['sm_clock_mean'] = metrics['sm_clock'].mean()
+            features['sm_clock_std'] = metrics['sm_clock'].std()
+            
+            # Clock stability (inverse of coefficient of variation)
+            mean_clock = features['sm_clock_mean']
+            std_clock = features['sm_clock_std']
+            if mean_clock > 0:
+                features['clock_stability'] = 1.0 - (std_clock / mean_clock)
+            else:
+                features['clock_stability'] = 1.0
+        else:
+            features['sm_clock_mean'] = 0.0
+            features['sm_clock_std'] = 0.0
+            features['clock_stability'] = 1.0
+        
+        # Memory clock variation
+        if 'memory_clock' in metrics.columns and metrics['memory_clock'].notna().any():
+            features['memory_clock_std'] = metrics['memory_clock'].std()
+        else:
+            features['memory_clock_std'] = 0.0
+        
+        # PCIe bandwidth features
+        if 'pcie_rx_throughput' in metrics.columns and metrics['pcie_rx_throughput'].notna().any():
+            features['pcie_rx_mean_gbps'] = metrics['pcie_rx_throughput'].mean() / 1e9
+            features['pcie_tx_mean_gbps'] = metrics['pcie_tx_throughput'].mean() / 1e9 if 'pcie_tx_throughput' in metrics else 0.0
+            
+            # PCIe bandwidth asymmetry (RX should typically be much higher for ML)
+            rx_mean = features['pcie_rx_mean_gbps']
+            tx_mean = features['pcie_tx_mean_gbps']
+            if tx_mean > 0:
+                features['pcie_asymmetry_ratio'] = rx_mean / tx_mean
+            else:
+                features['pcie_asymmetry_ratio'] = 0.0
+        else:
+            features['pcie_rx_mean_gbps'] = 0.0
+            features['pcie_tx_mean_gbps'] = 0.0
+            features['pcie_asymmetry_ratio'] = 0.0
+        
+        # NVLink bandwidth features
+        if 'nvlink_rx_throughput' in metrics.columns and metrics['nvlink_rx_throughput'].notna().any():
+            features['nvlink_rx_mean_gbps'] = metrics['nvlink_rx_throughput'].mean() / 1e9
+            features['nvlink_tx_mean_gbps'] = metrics['nvlink_tx_throughput'].mean() / 1e9 if 'nvlink_tx_throughput' in metrics else 0.0
+            
+            # NVLink utilization indicator
+            features['nvlink_active_pct'] = (metrics['nvlink_rx_throughput'] > 1e9).sum() / len(metrics) * 100
+        else:
+            features['nvlink_rx_mean_gbps'] = 0.0
+            features['nvlink_tx_mean_gbps'] = 0.0
+            features['nvlink_active_pct'] = 0.0
+        
+        # Energy consumption features
+        if 'total_energy_consumption' in metrics.columns and metrics['total_energy_consumption'].notna().any():
+            # Energy per hour (mJ to kWh)
+            energy_delta = metrics['total_energy_consumption'].max() - metrics['total_energy_consumption'].min()
+            time_delta_hours = (metrics['time'].max() - metrics['time'].min()).total_seconds() / 3600.0
+            
+            if time_delta_hours > 0:
+                features['energy_kwh_per_hour'] = (energy_delta / 1e6) / time_delta_hours  # mJ to kWh
+            else:
+                features['energy_kwh_per_hour'] = 0.0
+        else:
+            features['energy_kwh_per_hour'] = 0.0
+        
+        # ECC error aggregate trends
+        if 'ecc_sbe_aggregate' in metrics.columns and metrics['ecc_sbe_aggregate'].notna().any():
+            # ECC error rate (errors per hour)
+            ecc_delta = metrics['ecc_sbe_aggregate'].max() - metrics['ecc_sbe_aggregate'].min()
+            time_delta_hours = (metrics['time'].max() - metrics['time'].min()).total_seconds() / 3600.0
+            
+            if time_delta_hours > 0:
+                features['ecc_sbe_rate_per_hour'] = ecc_delta / time_delta_hours
+            else:
+                features['ecc_sbe_rate_per_hour'] = 0.0
+            
+            # DBE rate
+            if 'ecc_dbe_aggregate' in metrics.columns:
+                dbe_delta = metrics['ecc_dbe_aggregate'].max() - metrics['ecc_dbe_aggregate'].min()
+                if time_delta_hours > 0:
+                    features['ecc_dbe_rate_per_hour'] = dbe_delta / time_delta_hours
+                else:
+                    features['ecc_dbe_rate_per_hour'] = 0.0
+        else:
+            features['ecc_sbe_rate_per_hour'] = 0.0
+            features['ecc_dbe_rate_per_hour'] = 0.0
+        
+        # Memory copy utilization
+        if 'memory_copy_utilization' in metrics.columns and metrics['memory_copy_utilization'].notna().any():
+            features['memory_copy_util_mean'] = metrics['memory_copy_utilization'].mean()
+            features['memory_copy_util_max'] = metrics['memory_copy_utilization'].max()
+        else:
+            features['memory_copy_util_mean'] = 0.0
+            features['memory_copy_util_max'] = 0.0
+        
+        # Tensor core utilization (if available)
+        if 'tensor_active' in metrics.columns and metrics['tensor_active'].notna().any():
+            features['tensor_active_mean'] = metrics['tensor_active'].mean()
+            features['tensor_active_max'] = metrics['tensor_active'].max()
+            
+            # Tensor usage indicator (% of time tensor cores active >50%)
+            features['tensor_usage_pct'] = (metrics['tensor_active'] > 50).sum() / len(metrics) * 100
+        else:
+            features['tensor_active_mean'] = 0.0
+            features['tensor_active_max'] = 0.0
+            features['tensor_usage_pct'] = 0.0
         
         return features
     

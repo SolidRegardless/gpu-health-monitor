@@ -97,14 +97,12 @@ services:
   mock-dcgm:
     build:
       context: ../src/mock-dcgm
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.multi
     hostname: mock-dcgm
     container_name: gpu-monitor-mock-dcgm
     ports:
       - "9400:9400"  # Prometheus exporter format endpoint
     environment:
-      GPU_UUID: "GPU-abc123def456"
-      GPU_MODEL: "NVIDIA A100-SXM4-80GB"
       POLL_INTERVAL: 10
       EXPORTER_PORT: 9400
     networks:
