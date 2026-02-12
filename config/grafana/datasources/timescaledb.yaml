@@ -1,0 +1,19 @@
+apiVersion: 1
+
+datasources:
+  - name: GPU Health TimescaleDB
+    type: postgres
+    access: proxy
+    url: timescaledb:5432
+    database: gpu_health
+    user: gpu_monitor
+    secureJsonData:
+      password: gpu_monitor_secret
+    jsonData:
+      sslmode: 'disable'
+      postgresVersion: 1500
+      timescaledb: true
+      database: gpu_health
+    editable: true
+    isDefault: true
+    version: 1

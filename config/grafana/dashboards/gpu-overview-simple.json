@@ -1,0 +1,124 @@
+{
+  "dashboard": {
+    "title": "GPU Health Monitor - Simple",
+    "uid": "gpu-health-simple",
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "version": 1,
+    "refresh": "5s",
+    "time": {
+      "from": "now-15m",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "GPU Temperature",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "datasource": {
+          "type": "postgres",
+          "uid": "P0D1C26D7DC78F49D"
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "postgres",
+              "uid": "P0D1C26D7DC78F49D"
+            },
+            "rawSql": "SELECT\n  time AS \"time\",\n  gpu_temp AS \"Temperature\"\nFROM gpu_metrics\nWHERE time > NOW() - INTERVAL '15 minutes'\nORDER BY time",
+            "format": "time_series",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "celsius"
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "Power Usage",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "datasource": {
+          "type": "postgres",
+          "uid": "P0D1C26D7DC78F49D"
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "postgres",
+              "uid": "P0D1C26D7DC78F49D"
+            },
+            "rawSql": "SELECT\n  time AS \"time\",\n  power_usage AS \"Power\"\nFROM gpu_metrics\nWHERE time > NOW() - INTERVAL '15 minutes'\nORDER BY time",
+            "format": "time_series",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "watt"
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "Health Score",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 8},
+        "datasource": {
+          "type": "postgres",
+          "uid": "P0D1C26D7DC78F49D"
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "postgres",
+              "uid": "P0D1C26D7DC78F49D"
+            },
+            "rawSql": "SELECT overall_score AS \"Health Score\" FROM gpu_health_scores ORDER BY time DESC LIMIT 1",
+            "format": "table",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "GPU Utilization",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+        "datasource": {
+          "type": "postgres",
+          "uid": "P0D1C26D7DC78F49D"
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "postgres",
+              "uid": "P0D1C26D7DC78F49D"
+            },
+            "rawSql": "SELECT\n  time AS \"time\",\n  gpu_utilization AS \"Utilization\"\nFROM gpu_metrics\nWHERE time > NOW() - INTERVAL '15 minutes'\nORDER BY time",
+            "format": "time_series",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "max": 100,
+            "min": 0
+          }
+        }
+      }
+    ]
+  },
+  "overwrite": true
+}

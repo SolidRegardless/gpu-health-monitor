@@ -1,3 +1,4 @@
+version: '3.8'
 
 services:
   # =========================
@@ -179,14 +180,14 @@ services:
       - timescaledb
     environment:
       KAFKA_BROKERS: "kafka:9092"
-      KAFKA_INPUT_TOPIC: "gpu-metrics-enriched"
+      KAFKA_INPUT_TOPIC: "gpu-metrics-raw"
       KAFKA_GROUP_ID: "timescale-sink"
       DB_HOST: "timescaledb"
       DB_PORT: "5432"
       DB_NAME: "gpu_health"
       DB_USER: "gpu_monitor"
       DB_PASSWORD: "gpu_monitor_secret"
-      BATCH_SIZE: 10
+      BATCH_SIZE: 1000
       BATCH_TIMEOUT: 5
     networks:
       - gpu-monitor-net
@@ -228,6 +229,16 @@ services:
     networks:
       - gpu-monitor-net
 
+volumes:
+  zookeeper-data:
+  zookeeper-logs:
+  kafka-data:
+  timescaledb-data:
+  grafana-data:
+
+networks:
+  gpu-monitor-net:
+    driver: bridge
 
   # =========================
   # Database GUI (Adminer)
@@ -245,134 +256,3 @@ services:
     environment:
       ADMINER_DEFAULT_SERVER: timescaledb
       ADMINER_DESIGN: nette
-
-
-  ml-detector:
-    build:
-      context: ../src/ml-detector
-      dockerfile: Dockerfile
-    hostname: ml-detector
-    container_name: gpu-monitor-ml-detector
-    depends_on:
-      - timescaledb
-    environment:
-      DB_HOST: "timescaledb"
-      DB_PORT: "5432"
-      DB_NAME: "gpu_health"
-      DB_USER: "gpu_monitor"
-      DB_PASSWORD: "gpu_monitor_secret"
-      DETECTION_INTERVAL: 300  # 5 minutes
-      Z_SCORE_THRESHOLD: 3.0
-      LOOKBACK_HOURS: 24
-    networks:
-      - gpu-monitor-net
-
-
-  alerting:
-    build:
-      context: ../src/alerting
-      dockerfile: Dockerfile
-    hostname: alerting
-    container_name: gpu-monitor-alerting
-    depends_on:
-      - timescaledb
-    environment:
-      DB_HOST: "timescaledb"
-      DB_PORT: "5432"
-      DB_NAME: "gpu_health"
-      DB_USER: "gpu_monitor"
-      DB_PASSWORD: "gpu_monitor_secret"
-      CHECK_INTERVAL: 60  # 1 minute
-    networks:
-      - gpu-monitor-net
-
-
-  feature-engineering:
-    build:
-      context: ../src/feature-engineering
-      dockerfile: Dockerfile
-    hostname: feature-engineering
-    container_name: gpu-monitor-feature-engineering
-    depends_on:
-      - timescaledb
-    environment:
-      DB_HOST: "timescaledb"
-      DB_PORT: "5432"
-      DB_NAME: "gpu_health"
-      DB_USER: "gpu_monitor"
-      DB_PASSWORD: "gpu_monitor_secret"
-      FEATURE_INTERVAL: 300  # 5 minutes (was 3600 = 1 hour)
-    networks:
-      - gpu-monitor-net
-
-  failure-predictor:
-    build:
-      context: ../src/failure-predictor
-      dockerfile: Dockerfile
-    hostname: failure-predictor
-    container_name: gpu-monitor-failure-predictor
-    depends_on:
-      - timescaledb
-      - feature-engineering
-    environment:
-      DB_HOST: "timescaledb"
-      DB_PORT: "5432"
-      DB_NAME: "gpu_health"
-      DB_USER: "gpu_monitor"
-      DB_PASSWORD: "gpu_monitor_secret"
-      PREDICTION_INTERVAL: 300  # 5 minutes (was 3600 = 1 hour)
-      MODEL_PATH: "/models/failure_predictor.pkl"
-    volumes:
-      - failure-models:/models
-    networks:
-      - gpu-monitor-net
-
-  economic-engine:
-    build:
-      context: ../src/economic-engine
-      dockerfile: Dockerfile
-    hostname: economic-engine
-    container_name: gpu-monitor-economic-engine
-    depends_on:
-      - timescaledb
-      - health-scorer
-      - failure-predictor
-    environment:
-      DB_HOST: "timescaledb"
-      DB_PORT: "5432"
-      DB_NAME: "gpu_health"
-      DB_USER: "gpu_monitor"
-      DB_PASSWORD: "gpu_monitor_secret"
-      ANALYSIS_INTERVAL: 1800  # 30 minutes (was 86400 = 24 hours)
-    networks:
-      - gpu-monitor-net
-
-  mlflow:
-    build:
-      context: ../src/mlflow
-      dockerfile: Dockerfile
-    hostname: mlflow
-    container_name: gpu-monitor-mlflow
-    depends_on:
-      - timescaledb
-    ports:
-      - "5000:5000"
-    volumes:
-      - mlflow-artifacts:/mlflow/artifacts
-      - mlflow-runs:/mlflow/runs
-    networks:
-      - gpu-monitor-net
-
-volumes:
-  failure-models:
-  mlflow-artifacts:
-  mlflow-runs:
-  zookeeper-data:
-  zookeeper-logs:
-  kafka-data:
-  timescaledb-data:
-  grafana-data:
-
-networks:
-  gpu-monitor-net:
-    driver: bridge
