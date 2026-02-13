@@ -122,7 +122,9 @@
               }
             ]
           },
-          "unit": "celsius"
+          "unit": "celsius",
+          "min": 0,
+          "max": 100
         }
       },
       "gridPos": {
@@ -187,7 +189,9 @@
               }
             ]
           },
-          "unit": "watt"
+          "unit": "watt",
+          "min": 0,
+          "max": 3000
         }
       },
       "gridPos": {

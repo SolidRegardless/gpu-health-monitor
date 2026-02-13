@@ -29,7 +29,7 @@ FROM (
 
 4. **Query Performance**: Scanning the entire hypertable without a time filter is slower and more likely to timeout or return partial results.
 
-### Solution
+### Solution - Part 1: Query Timing
 Added a **30-second time window** to ensure queries only aggregate over recent, consistent data:
 
 ```sql
@@ -50,6 +50,50 @@ FROM (
 - Recent enough to be "live" but wide enough to avoid gaps during write delays
 - TimescaleDB hypertables are highly optimized for time-range queries
 
+### Solution - Part 2: Gauge Min/Max Configuration
+
+The gauges also needed **explicit min/max values** to display the filled progress bar:
+
+```json
+// BEFORE (no fill bar):
+{
+  "fieldConfig": {
+    "defaults": {
+      "thresholds": { ... },
+      "unit": "celsius"
+      // ❌ Missing min/max!
+    }
+  }
+}
+
+// AFTER (shows fill bar):
+{
+  "fieldConfig": {
+    "defaults": {
+      "min": 0,           // ← Added
+      "max": 100,         // ← Added
+      "thresholds": { ... },
+      "unit": "celsius"
+    }
+  }
+}
+```
+
+**Min/Max Values Set:**
+- **Avg Temperature**: 0-100°C (typical GPU operating range)
+- **Total Power**: 0-3000W (5 GPUs × ~600W headroom per GPU)
+
+**Why these ranges?**
+- Temperature: GPUs idle around 40°C, max safe temp ~95°C, so 0-100°C covers full range
+- Power: H100 TDP is ~700W, A100 is ~400W. 3000W total gives headroom for all 5 GPUs at peak
+- Thresholds (yellow/red warnings) work as percentages of these ranges
+
+**Visual Result:**
+- At ~70°C average: Gauge shows ~70% filled, green/yellow color
+- At ~1800W total: Gauge shows ~60% filled, green color
+
+Without min/max, Grafana displays the numeric value but can't draw the filled bar (doesn't know the scale).
+
 ### Changes Applied
 
 **File Modified**: `config/grafana/dashboards/datacenter-overview.json`
@@ -58,10 +102,15 @@ FROM (
 1. **Avg Temperature** (gauge panel)
 2. **Total Power Consumption** (gauge panel)
 
-**Query Changes**:
-- Added `AND time > NOW() - INTERVAL '30 seconds'` to WHERE clause
-- Both queries now filter to only recent data
-- Eliminates race conditions and stale data issues
+**Changes Applied**:
+1. **Query Timing**: Added `AND time > NOW() - INTERVAL '30 seconds'` to WHERE clause
+   - Both queries now filter to only recent data
+   - Eliminates race conditions and stale data issues
+
+2. **Gauge Configuration**: Added explicit min/max values
+   - Avg Temperature: `min: 0, max: 100` (°C)
+   - Total Power: `min: 0, max: 3000` (W)
+   - Enables Grafana to render filled progress bar
 
 ### Testing
 
