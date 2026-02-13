@@ -65,3 +65,10 @@ node_modules/
 
 # OS
 Thumbs.db
+
+# Private/sensitive documentation
+*-private/
+interview-*.md
+*deployment*.md
+terraform-deployment*.md
+*demo-guide*.md
