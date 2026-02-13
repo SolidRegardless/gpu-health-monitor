@@ -18,7 +18,12 @@
   "templating": {
     "list": [
       {
-        "current": {},
+        "allValue": "",
+        "current": {
+          "selected": false,
+          "text": "GPU-abc123def456",
+          "value": "GPU-abc123def456"
+        },
         "datasource": {
           "type": "postgres",
           "uid": "P0D1C26D7DC78F49D"
@@ -26,9 +31,16 @@
         "definition": "SELECT DISTINCT gpu_uuid FROM gpu_metrics ORDER BY gpu_uuid",
         "hide": 0,
         "includeAll": false,
+        "label": "GPU",
         "multi": false,
         "name": "gpu_uuid",
-        "options": [],
+        "options": [
+          {
+            "selected": true,
+            "text": "GPU-abc123def456",
+            "value": "GPU-abc123def456"
+          }
+        ],
         "query": "SELECT DISTINCT gpu_uuid FROM gpu_metrics ORDER BY gpu_uuid",
         "refresh": 1,
         "regex": "",
