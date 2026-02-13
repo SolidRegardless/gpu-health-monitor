@@ -42,8 +42,8 @@
 ### Root Documentation (5 files, ~140 KB)
 ```
 README.md (14 KB)                    - Main project overview
-CURRENT_STATUS.md (12 KB)            - Latest implementation status
-FRESH_DEPLOYMENT.md (7 KB)           - Quick deployment guide
+current-status.md (12 KB)            - Latest implementation status
+fresh-deployment.md (7 KB)           - Quick deployment guide
 gpu-health-system-architecture.md (59 KB) - Complete system design
 gpu-health-poc-implementation.md (43 KB)  - POC deployment guide
 ```
@@ -51,18 +51,18 @@ gpu-health-poc-implementation.md (43 KB)  - POC deployment guide
 ### Documentation Directory (11 files, ~40 KB)
 ```
 docs/
-├── INDEX.md (4 KB)                  - Documentation navigation index
+├── index.md (4 KB)                  - Documentation navigation index
 ├── README.md (3 KB)                 - Docs overview
-├── DATABASE_TABLES_EXPLAINED.md (8 KB)   - Schema reference
-├── ML_TECH_STACK.md (7 KB)          - ML models and dependencies
-├── QUICK_START.md (9 KB)            - Quick start guide
+├── database-tables-explained.md (8 KB)   - Schema reference
+├── ml-tech-stack.md (7 KB)          - ML models and dependencies
+├── quick-start.md (9 KB)            - Quick start guide
 ├── architecture/
 │   ├── dcgm-integration.md          - DCGM setup and integration
 │   ├── kafka-integration.md         - Kafka streaming architecture
 │   ├── ml-pipeline-architecture.md  - ML pipeline design
 │   └── timescaledb-integration.md   - TimescaleDB design
 └── development/
-    └── SETUP.md                     - Dev environment setup
+    └── setup.md                     - Dev environment setup
 ```
 
 ### Schema Documentation (1 file)
@@ -90,8 +90,8 @@ schema/README.md                     - SQL schema documentation
 ```
 gpu-health-monitor/
 ├── README.md                        ⭐ Start here
-├── CURRENT_STATUS.md                📊 Current implementation
-├── FRESH_DEPLOYMENT.md              🚀 Quick deploy
+├── current-status.md                📊 Current implementation
+├── fresh-deployment.md              🚀 Quick deploy
 ├── LICENSE                          ⚖️ MIT License
 ├── .gitignore                       🚫 Git ignore rules
 │
@@ -102,11 +102,11 @@ gpu-health-monitor/
 │   └── README.md                    🔧 CI/CD info
 │
 ├── docs/
-│   ├── INDEX.md                     📖 Documentation index
+│   ├── index.md                     📖 Documentation index
 │   ├── README.md                    📚 Docs overview
-│   ├── QUICK_START.md               ⚡ Quick start
-│   ├── DATABASE_TABLES_EXPLAINED.md 🗄️ Schema reference
-│   ├── ML_TECH_STACK.md             🤖 ML stack
+│   ├── quick-start.md               ⚡ Quick start
+│   ├── database-tables-explained.md 🗄️ Schema reference
+│   ├── ml-tech-stack.md             🤖 ML stack
 │   │
 │   ├── architecture/                🏗️ Architecture deep-dives
 │   │   ├── dcgm-integration.md
@@ -115,7 +115,7 @@ gpu-health-monitor/
 │   │   └── timescaledb-integration.md
 │   │
 │   └── development/                 👨‍💻 Dev guides
-│       └── SETUP.md
+│       └── setup.md
 │
 └── schema/
     └── README.md                    💾 SQL docs
@@ -153,12 +153,12 @@ gpu-health-monitor/
 
 ### For New Users:
 ```
-README.md → FRESH_DEPLOYMENT.md → Grafana Dashboards
+README.md → fresh-deployment.md → Grafana Dashboards
 ```
 
 ### For Developers:
 ```
-README.md → docs/INDEX.md → docs/development/SETUP.md
+README.md → docs/index.md → docs/development/setup.md
 ```
 
 ### For System Architects:
@@ -168,19 +168,19 @@ README.md → gpu-health-system-architecture.md → docs/architecture/
 
 ### For Database Work:
 ```
-docs/DATABASE_TABLES_EXPLAINED.md → schema/README.md → schema/*.sql
+docs/database-tables-explained.md → schema/README.md → schema/*.sql
 ```
 
 ### For ML Work:
 ```
-docs/ML_TECH_STACK.md → docs/architecture/ml-pipeline-architecture.md
+docs/ml-tech-stack.md → docs/architecture/ml-pipeline-architecture.md
 ```
 
 ## ✨ Added Files
 
 Created 4 new essential files:
 
-1. **`docs/INDEX.md`** (4 KB)
+1. **`docs/index.md`** (4 KB)
    - Complete documentation navigation index
    - Quick reference for all docs
    - Status table with sizes and dates

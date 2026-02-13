@@ -4,7 +4,7 @@
 
 This directory contains comprehensive technical documentation for the GPU Health Monitor system, a production-grade monitoring and predictive maintenance platform for NVIDIA A100/H100 GPU fleets.
 
-**📖 See [Documentation Index](INDEX.md) for a complete guide to all documentation.**
+**📖 See [Documentation Index](index.md) for a complete guide to all documentation.**
 
 ## Documentation Structure
 

@@ -94,11 +94,11 @@ This repository contains comprehensive documentation for implementing a GPU heal
 
 - **[System Architecture](gpu-health-system-architecture.md)**: Complete technical architecture, data models, health definitions, and economic decision engine
 - **[POC Implementation Guide](gpu-health-poc-implementation.md)**: Step-by-step 6-week proof-of-concept deployment for 50 GPUs
-- **[Fresh Deployment Guide](FRESH_DEPLOYMENT.md)**: Quick reference for deploying on a fresh system
-- **[Quick Start Guide](docs/QUICK_START.md)**: Fast path to running the system with Docker Compose
-- **[Current Status](CURRENT_STATUS.md)**: Current implementation status and component completion
-- **[Database Tables](docs/DATABASE_TABLES_EXPLAINED.md)**: Complete database schema reference
-- **[ML Tech Stack](docs/ML_TECH_STACK.md)**: Machine learning models and dependencies
+- **[Fresh Deployment Guide](fresh-deployment.md)**: Quick reference for deploying on a fresh system
+- **[Quick Start Guide](docs/quick-start.md)**: Fast path to running the system with Docker Compose
+- **[Current Status](current-status.md)**: Current implementation status and component completion
+- **[Database Tables](docs/database-tables-explained.md)**: Complete database schema reference
+- **[ML Tech Stack](docs/ml-tech-stack.md)**: Machine learning models and dependencies
 - **[Grafana Dashboards](docs/PREDICTIVE_DASHBOARD.md)**: Dashboard setup and configuration
 
 ## Quick Start

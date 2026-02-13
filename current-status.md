@@ -299,9 +299,9 @@ All configuration is in place and ready for fresh deployment:
 | Document | Description | Status |
 |----------|-------------|--------|
 | `README.md` | Project overview and architecture | ✅ Complete |
-| `CURRENT_STATUS.md` | **This file** - Current implementation status | ✅ Updated |
-| `docs/DATABASE_TABLES_EXPLAINED.md` | Database schema reference | ✅ Complete |
-| `docs/ML_TECH_STACK.md` | ML models and tech stack | ✅ Complete |
+| `current-status.md` | **This file** - Current implementation status | ✅ Updated |
+| `docs/database-tables-explained.md` | Database schema reference | ✅ Complete |
+| `docs/ml-tech-stack.md` | ML models and tech stack | ✅ Complete |
 | `gpu-health-system-architecture.md` | Full system design | ✅ Complete |
 | `gpu-health-poc-implementation.md` | 6-week POC guide | ✅ Complete |
 

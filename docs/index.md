@@ -7,9 +7,9 @@
 Start here if you're new to the project:
 
 1. **[Main README](../README.md)** - Project overview and quick start
-2. **[Fresh Deployment Guide](../FRESH_DEPLOYMENT.md)** - Deploy on a clean system in 60 seconds
-3. **[Quick Start Guide](QUICK_START.md)** - Detailed first-run instructions
-4. **[Current Status](../CURRENT_STATUS.md)** - Latest implementation status
+2. **[Fresh Deployment Guide](../fresh-deployment.md)** - Deploy on a clean system in 60 seconds
+3. **[Quick Start Guide](quick-start.md)** - Detailed first-run instructions
+4. **[Current Status](../current-status.md)** - Latest implementation status
 
 ## 📚 Core Documentation
 
@@ -26,12 +26,12 @@ Start here if you're new to the project:
   - Budget and resource planning
 
 ### Technical Reference
-- **[Database Tables Explained](DATABASE_TABLES_EXPLAINED.md)** (8 KB)
+- **[Database Tables Explained](database-tables-explained.md)** (8 KB)
   - Complete schema documentation
   - Table relationships
   - Index and compression strategies
 
-- **[ML Tech Stack](ML_TECH_STACK.md)** (7 KB)
+- **[ML Tech Stack](ml-tech-stack.md)** (7 KB)
   - Machine learning models (XGBoost, LSTM)
   - Python dependencies
   - Model training pipeline
@@ -52,7 +52,7 @@ Located in `docs/architecture/`:
 
 ## 🛠️ Development
 
-- **[Development Setup](development/SETUP.md)** - Local dev environment configuration
+- **[Development Setup](development/setup.md)** - Local dev environment configuration
 - **[Docs Overview](README.md)** - Documentation structure
 
 ## 📊 Grafana Dashboards
