@@ -140,9 +140,7 @@ resource "azurerm_linux_virtual_machine" "gpu_monitor" {
     version   = "latest"
   }
   
-  custom_data = base64encode(templatefile("${path.module}/cloud-init.yaml", {
-    repo_archive = filebase64("${path.module}/../gpu-health-monitor.tar.gz")
-  }))
+  custom_data = base64encode(file("${path.module}/cloud-init-simple.yaml"))
   
   tags = azurerm_resource_group.gpu_monitor.tags
 }

@@ -7,7 +7,7 @@ variable "resource_group_name" {
 variable "location" {
   description = "Azure region for resources"
   type        = string
-  default     = "eastus"
+  default     = "westus2"
 }
 
 variable "prefix" {
@@ -19,7 +19,7 @@ variable "prefix" {
 variable "vm_size" {
   description = "Azure VM size"
   type        = string
-  default     = "Standard_D4s_v3"  # 4 vCPU, 16 GB RAM
+  default     = "Standard_B4ms"  # 4 vCPU, 16 GB RAM, burstable
 }
 
 variable "admin_username" {
