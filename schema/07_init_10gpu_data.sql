@@ -173,7 +173,7 @@ ON CONFLICT (gpu_uuid) DO UPDATE SET
     updated_at = NOW();
 
 -- Insert Datacenter Mappings
-INSERT INTO gpu_datacenter_mapping (gpu_uuid, datacenter, rack_id, region) VALUES
+INSERT INTO gpu_datacenter_mapping (gpu_uuid, datacenter, rack_id, location) VALUES
     -- DC-EAST-01
     ('GPU-abc123def456', 'DC-EAST-01', 'rack-A1', 'us-east-1'),
     ('GPU-def456abc789', 'DC-EAST-01', 'rack-A1', 'us-east-1'),
@@ -190,7 +190,7 @@ INSERT INTO gpu_datacenter_mapping (gpu_uuid, datacenter, rack_id, region) VALUE
 ON CONFLICT (gpu_uuid) DO UPDATE SET
     datacenter = EXCLUDED.datacenter,
     rack_id = EXCLUDED.rack_id,
-    region = EXCLUDED.region;
+    location = EXCLUDED.location;
 
 -- Verify the data
 SELECT 
