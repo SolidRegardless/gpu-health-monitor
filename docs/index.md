@@ -9,7 +9,6 @@ Start here if you're new to the project:
 1. **[Main README](../README.md)** - Project overview and quick start
 2. **[Fresh Deployment Guide](../fresh-deployment.md)** - Deploy on a clean system in 60 seconds
 3. **[Quick Start Guide](quick-start.md)** - Detailed first-run instructions
-4. **[Current Status](../current-status.md)** - Latest implementation status
 
 ## 📚 Core Documentation
 
@@ -68,31 +67,32 @@ The system includes 6 pre-configured dashboards:
 
 Access: http://localhost:3000 (admin/admin)
 
-## 🔧 Troubleshooting & Fixes
+## 🛠️ Deployment & Operations
 
-### Production Fixes (2026-02-13)
+- **[Deployment Scripts Comparison](../deployment-scripts.md)**
+  - Azure CLI vs Terraform deployment methods
+  - Prerequisites and feature comparison
+  - Troubleshooting deployment issues
 
-- **[Predictive Dashboard Fix](../PREDICTIVE_DASHBOARD_FIX.md)** (8 KB)
-  - Complete fix for "No Data" issues in predictive analytics dashboard
-  - Feature engineering column name corrections
-  - Dashboard variable configuration
-  - Table panel solution for text display
-  
-- **[Gauge Visualization Fix](../GAUGE_FIX_SUMMARY.md)** (9 KB)
-  - Fixed 13 gauge panels across 4 dashboards
-  - All gauges now show filled progress bars
-  - Min/max configuration guide
+- **[Terraform Deployment](../terraform-deployment.md)**
+  - Infrastructure-as-code deployment guide
+  - Azure resource configuration
+  - Network and security setup
 
-- **[Schema Initialization Fix](../DEPLOYMENT_FIX.md)** (4 KB)
-  - Resolved database initialization conflicts
-  - Correct schema file ordering
-  - Column name corrections
-
-- **[Grafana Provisioning Guide](../GRAFANA_PROVISIONING.md)** (8 KB)
-  - Complete Grafana provisioning reference
+- **[Grafana Provisioning](../grafana-provisioning.md)**
+  - Automatic dashboard and datasource provisioning
   - Dashboard update procedures
-  - Troubleshooting stat vs table panels
-  - Security and verification checklists
+  - Troubleshooting panel issues
+
+- **[Interview Demo Guide](../interview-demo-guide.md)**
+  - Complete walkthrough for demonstrations
+  - Key features and talking points
+  - Common questions and answers
+
+- **[Predictive Analytics Guide](../predictive-analytics.md)**
+  - ML-based failure prediction features
+  - Dashboard panel descriptions
+  - Data requirements and interpretation
 
 ## 🔧 Quick Reference
 
@@ -124,8 +124,10 @@ docker logs gpu-monitor-<service-name> --tail 50 --follow
 |----------|------|--------------|--------|
 | System Architecture | 59 KB | 2026-02-11 | ✅ Current |
 | POC Implementation | 43 KB | 2026-02-11 | ✅ Current |
-| Current Status | 12 KB | 2026-02-13 | ✅ Current |
 | Fresh Deployment | 7 KB | 2026-02-13 | ✅ Current |
+| Deployment Scripts | 6 KB | 2026-02-13 | ✅ Current |
+| Terraform Deployment | 8 KB | 2026-02-11 | ✅ Current |
+| Grafana Provisioning | 8 KB | 2026-02-13 | ✅ Current |
 | Database Tables | 8 KB | 2026-02-12 | ✅ Current |
 | ML Tech Stack | 7 KB | 2026-02-12 | ✅ Current |
 | Quick Start | 9 KB | 2026-02-11 | ✅ Current |
@@ -148,6 +150,7 @@ When adding documentation:
 
 ---
 
-**Total Documentation:** 15 files (~160 KB)  
+**Total Documentation:** 10 core files + 8 in docs/ (~120 KB)  
 **Format:** Markdown with Mermaid diagrams  
 **Version Control:** All docs in Git  
+**Note:** Transient fix documentation consolidated into CHANGELOG.md
