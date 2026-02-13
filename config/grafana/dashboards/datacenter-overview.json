@@ -71,7 +71,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "fields": "",
           "values": false
         },
@@ -133,7 +135,9 @@
       "options": {
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["mean"],
+          "calcs": [
+            "mean"
+          ],
           "fields": "",
           "values": false
         },
@@ -148,7 +152,7 @@
             "uid": "P0D1C26D7DC78F49D"
           },
           "format": "table",
-          "rawSql": "SELECT AVG(g.gpu_temp) as \"Avg Temp\"\nFROM (\n  SELECT DISTINCT ON (gpu_uuid) gpu_uuid, gpu_temp\n  FROM gpu_metrics\n  WHERE gpu_uuid IN (SELECT gpu_uuid FROM gpu_datacenter_mapping WHERE datacenter = '$datacenter')\n  ORDER BY gpu_uuid, time DESC\n) g",
+          "rawSql": "SELECT AVG(g.gpu_temp) as \"Avg Temp\"\nFROM (\n  SELECT DISTINCT ON (gpu_uuid) gpu_uuid, gpu_temp\n  FROM gpu_metrics\n  WHERE gpu_uuid IN (SELECT gpu_uuid FROM gpu_datacenter_mapping WHERE datacenter = '$datacenter') AND time > NOW() - INTERVAL '30 seconds'\n  ORDER BY gpu_uuid, time DESC\n) g",
           "refId": "A"
         }
       ],
@@ -196,7 +200,9 @@
       "options": {
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["sum"],
+          "calcs": [
+            "sum"
+          ],
           "fields": "",
           "values": false
         },
@@ -211,7 +217,7 @@
             "uid": "P0D1C26D7DC78F49D"
           },
           "format": "table",
-          "rawSql": "SELECT SUM(g.power_usage) as \"Total Power\"\nFROM (\n  SELECT DISTINCT ON (gpu_uuid) gpu_uuid, power_usage\n  FROM gpu_metrics\n  WHERE gpu_uuid IN (SELECT gpu_uuid FROM gpu_datacenter_mapping WHERE datacenter = '$datacenter')\n  ORDER BY gpu_uuid, time DESC\n) g",
+          "rawSql": "SELECT SUM(g.power_usage) as \"Total Power\"\nFROM (\n  SELECT DISTINCT ON (gpu_uuid) gpu_uuid, power_usage\n  FROM gpu_metrics\n  WHERE gpu_uuid IN (SELECT gpu_uuid FROM gpu_datacenter_mapping WHERE datacenter = '$datacenter') AND time > NOW() - INTERVAL '30 seconds'\n  ORDER BY gpu_uuid, time DESC\n) g",
           "refId": "A"
         }
       ],
@@ -259,7 +265,9 @@
       "options": {
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["mean"],
+          "calcs": [
+            "mean"
+          ],
           "fields": "",
           "values": false
         },
@@ -325,7 +333,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["sum"],
+          "calcs": [
+            "sum"
+          ],
           "fields": "",
           "values": false
         },
@@ -390,7 +400,9 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": ["sum"],
+          "calcs": [
+            "sum"
+          ],
           "fields": "",
           "values": false
         },
@@ -445,7 +457,7 @@
             "properties": [
               {
                 "id": "displayName",
-                "value": "Avg Temp (°C)"
+                "value": "Avg Temp (\u00b0C)"
               },
               {
                 "id": "custom.displayMode",
@@ -497,7 +509,9 @@
       "options": {
         "footer": {
           "fields": "",
-          "reducer": ["sum"],
+          "reducer": [
+            "sum"
+          ],
           "show": false
         },
         "showHeader": true
@@ -572,7 +586,10 @@
       "id": 11,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom"
         },
@@ -651,7 +668,10 @@
       "id": 12,
       "options": {
         "legend": {
-          "calcs": ["mean", "max"],
+          "calcs": [
+            "mean",
+            "max"
+          ],
           "displayMode": "table",
           "placement": "bottom"
         },
@@ -708,7 +728,7 @@
             "properties": [
               {
                 "id": "displayName",
-                "value": "Temp (°C)"
+                "value": "Temp (\u00b0C)"
               },
               {
                 "id": "custom.displayMode",
@@ -784,14 +804,16 @@
       "options": {
         "footer": {
           "fields": "",
-          "reducer": ["sum"],
+          "reducer": [
+            "sum"
+          ],
           "show": false
         },
         "showHeader": true,
         "sortBy": [
           {
             "desc": true,
-            "displayName": "Temp (°C)"
+            "displayName": "Temp (\u00b0C)"
           }
         ]
       },
@@ -814,7 +836,10 @@
   "refresh": "10s",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["datacenter", "overview"],
+  "tags": [
+    "datacenter",
+    "overview"
+  ],
   "templating": {
     "list": [
       {
