@@ -22,11 +22,15 @@ EXPORTER_PORT = int(os.getenv('EXPORTER_PORT', '9400'))
 POLL_INTERVAL = int(os.getenv('POLL_INTERVAL', '10'))
 
 # GPU Profiles - Simulate different health states
+# DC-EAST-01: Original 5 GPUs
+# UK-SOUTH-01: New 5 GPUs with different characteristics
 GPU_PROFILES = [
+    # DC-EAST-01 GPUs (indices 0-4)
     {
         'index': 0,
         'uuid': 'GPU-abc123def456',
         'model': 'NVIDIA A100-SXM4-80GB',
+        'datacenter': 'DC-EAST-01',
         'profile': 'healthy',
         'base_temp': 65.0,
         'base_power': 300.0,
@@ -38,6 +42,7 @@ GPU_PROFILES = [
         'index': 1,
         'uuid': 'GPU-def456abc789',
         'model': 'NVIDIA A100-SXM4-80GB',
+        'datacenter': 'DC-EAST-01',
         'profile': 'high_temp',
         'base_temp': 72.0,  # Runs hotter
         'base_power': 310.0,
@@ -49,6 +54,7 @@ GPU_PROFILES = [
         'index': 2,
         'uuid': 'GPU-ghi789jkl012',
         'model': 'NVIDIA H100-SXM5-80GB',
+        'datacenter': 'DC-EAST-01',
         'profile': 'power_hungry',
         'base_temp': 68.0,
         'base_power': 340.0,  # Higher power
@@ -60,6 +66,7 @@ GPU_PROFILES = [
         'index': 3,
         'uuid': 'GPU-mno345pqr678',
         'model': 'NVIDIA A100-SXM4-80GB',
+        'datacenter': 'DC-EAST-01',
         'profile': 'aging',
         'base_temp': 70.0,
         'base_power': 295.0,
@@ -71,12 +78,77 @@ GPU_PROFILES = [
         'index': 4,
         'uuid': 'GPU-stu901vwx234',
         'model': 'NVIDIA H100-SXM5-80GB',
+        'datacenter': 'DC-EAST-01',
         'profile': 'excellent',
         'base_temp': 62.0,  # Runs cool
         'base_power': 290.0,
         'age_months': 1,  # New
         'ecc_error_rate': 0.0001,  # Minimal errors
         'degradation_factor': 1.0,
+    },
+    
+    # UK-SOUTH-01 GPUs (indices 5-9) - New datacenter with different characteristics
+    {
+        'index': 5,
+        'uuid': 'GPU-uk1aaa111bbb',
+        'model': 'NVIDIA H100-SXM5-80GB',
+        'datacenter': 'UK-SOUTH-01',
+        'profile': 'unstable_temp',
+        'base_temp': 67.0,
+        'base_power': 315.0,
+        'age_months': 8,
+        'ecc_error_rate': 0.004,
+        'degradation_factor': 0.98,
+        'temp_variance': 8.0,  # Large temperature swings
+    },
+    {
+        'index': 6,
+        'uuid': 'GPU-uk2bbb222ccc',
+        'model': 'NVIDIA A100-SXM4-80GB',
+        'datacenter': 'UK-SOUTH-01',
+        'profile': 'power_efficient',
+        'base_temp': 60.0,
+        'base_power': 270.0,  # Lower power consumption
+        'age_months': 4,
+        'ecc_error_rate': 0.0005,
+        'degradation_factor': 1.0,
+    },
+    {
+        'index': 7,
+        'uuid': 'GPU-uk3ccc333ddd',
+        'model': 'NVIDIA H100-SXM5-80GB',
+        'datacenter': 'UK-SOUTH-01',
+        'profile': 'memory_stress',
+        'base_temp': 69.0,
+        'base_power': 325.0,
+        'age_months': 14,
+        'ecc_error_rate': 0.008,  # Higher memory errors
+        'degradation_factor': 0.93,
+    },
+    {
+        'index': 8,
+        'uuid': 'GPU-uk4ddd444eee',
+        'model': 'NVIDIA A100-SXM4-80GB',
+        'datacenter': 'UK-SOUTH-01',
+        'profile': 'intermittent_load',
+        'base_temp': 64.0,
+        'base_power': 285.0,
+        'age_months': 22,
+        'ecc_error_rate': 0.006,
+        'degradation_factor': 0.91,
+        'load_pattern': 'burst',  # Bursty workload pattern
+    },
+    {
+        'index': 9,
+        'uuid': 'GPU-uk5eee555fff',
+        'model': 'NVIDIA H100-SXM5-80GB',
+        'datacenter': 'UK-SOUTH-01',
+        'profile': 'early_warning',
+        'base_temp': 71.0,
+        'base_power': 330.0,
+        'age_months': 28,
+        'ecc_error_rate': 0.015,  # Increasing error rate (early failure warning)
+        'degradation_factor': 0.88,
     },
 ]
 
@@ -125,6 +197,33 @@ class GPUSimulator:
         elif self.profile['profile'] == 'aging':
             # Lower utilization (assigned lighter workloads)
             return 0.4 + 0.2 * math.sin(t * 0.05)
+        elif self.profile.get('load_pattern') == 'burst':
+            # Intermittent burst pattern (UK4)
+            cycle_time = 180.0  # 3-minute cycles
+            phase = (t % cycle_time) / cycle_time
+            if phase < 0.1:
+                # Idle
+                return 0.05
+            elif phase < 0.25:
+                # Rapid ramp-up
+                return ((phase - 0.1) / 0.15) * 0.95
+            elif phase < 0.35:
+                # Peak burst
+                return 0.95 + 0.05 * random.random()
+            elif phase < 0.5:
+                # Rapid ramp-down
+                return 0.95 - ((phase - 0.35) / 0.15) * 0.9
+            else:
+                # Long idle period
+                return 0.05 + 0.02 * random.random()
+        elif self.profile['profile'] in ['power_efficient', 'memory_stress']:
+            # Steady moderate load with variations
+            return 0.6 + 0.2 * math.sin(t * 0.08) + random.gauss(0, 0.05)
+        elif self.profile['profile'] in ['unstable_temp', 'early_warning']:
+            # More erratic workload patterns
+            base = 0.7 + 0.15 * math.sin(t * 0.12)
+            noise = random.gauss(0, 0.1)
+            return max(0.1, min(1.0, base + noise))
         else:
             # Normal 5-minute cycle
             cycle_time = 300.0
@@ -149,11 +248,15 @@ class GPUSimulator:
         # Aging GPUs run hotter
         age_factor = 1.0 + (self.profile['age_months'] / 12) * 0.1
         
-        temp = base * age_factor + (intensity * 15.0) + random.gauss(0, 1.5)
+        # Special handling for unstable temperature GPUs
+        temp_variance = self.profile.get('temp_variance', 1.5)
         
-        # Occasional spikes
-        if random.random() < 0.01:
-            temp += random.uniform(5, 10)
+        temp = base * age_factor + (intensity * 15.0) + random.gauss(0, temp_variance)
+        
+        # Occasional spikes (more frequent for unstable GPUs)
+        spike_chance = 0.02 if self.profile['profile'] == 'unstable_temp' else 0.01
+        if random.random() < spike_chance:
+            temp += random.uniform(5, 15 if self.profile['profile'] == 'unstable_temp' else 10)
         
         return max(30, min(95, temp))
     
