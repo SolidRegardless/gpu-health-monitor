@@ -479,7 +479,13 @@
       },
       "options": {
         "colorMode": "background",
-        "textMode": "value_and_name"
+        "textMode": "value_and_name",
+        "reduceOptions": {
+          "values": true,
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
       }
     },
     {
