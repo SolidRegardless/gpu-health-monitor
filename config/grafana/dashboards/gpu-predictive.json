@@ -18,7 +18,11 @@
   "templating": {
     "list": [
       {
-        "current": {},
+        "current": {
+          "selected": true,
+          "text": "GPU-mno345pqr678",
+          "value": "GPU-mno345pqr678"
+        },
         "datasource": {
           "type": "postgres",
           "uid": "P0D1C26D7DC78F49D"
