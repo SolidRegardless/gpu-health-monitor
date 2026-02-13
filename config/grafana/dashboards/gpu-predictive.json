@@ -451,15 +451,33 @@
             "type": "postgres",
             "uid": "P0D1C26D7DC78F49D"
           },
-          "rawSql": "SELECT \n  predicted_failure_type AS \"Predicted Failure Type\"\nFROM gpu_failure_predictions \nWHERE gpu_uuid = '$gpu_uuid'\nORDER BY time DESC \nLIMIT 1",
+          "rawSql": "SELECT \n  predicted_failure_type AS value\nFROM gpu_failure_predictions \nWHERE gpu_uuid = '$gpu_uuid'\nORDER BY time DESC \nLIMIT 1",
           "format": "table",
           "refId": "A"
         }
       ],
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [],
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
       "options": {
-        "textMode": "value_and_name",
-        "colorMode": "value",
-        "graphMode": "none"
+        "textMode": "value",
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center"
       }
     },
     {
