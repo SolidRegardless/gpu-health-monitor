@@ -21,12 +21,11 @@ All notable changes to the GPU Health Monitor project.
   - Removed references to unavailable columns: nvlink, fan_speed, total_energy
 - **Added**: Schema-aware feature filtering (only saves features that exist in table)
 - **Added**: Default GPU selection to dashboard variable (auto-selects first GPU)
-- **Added**: Styled failure type panel with emojis and color coding:
-  - 🔥 Thermal Failure (orange)
-  - ⚡ Power Failure (yellow)
-  - 💾 Memory Failure (red)
-  - ⚠️ ECC Errors (purple)
-  - ⏰ Component Aging (blue)
+- **Added**: Styled failure type panel (table panel with stat-like appearance):
+  - Full-width orange background
+  - Centered text display
+  - Shows "thermal" or "power" failure types
+  - Note: Changed from stat to table panel due to Grafana limitations with text rendering
 - **Impact**: 
   - Feature engineering now extracts 27 features per GPU every 5 minutes
   - Failure predictions generated successfully (7/30/90-day risk probabilities)

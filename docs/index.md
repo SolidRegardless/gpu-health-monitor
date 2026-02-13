@@ -76,7 +76,7 @@ Access: http://localhost:3000 (admin/admin)
   - Complete fix for "No Data" issues in predictive analytics dashboard
   - Feature engineering column name corrections
   - Dashboard variable configuration
-  - Styled failure type panel with emojis
+  - Table panel solution for text display
   
 - **[Gauge Visualization Fix](../GAUGE_FIX_SUMMARY.md)** (9 KB)
   - Fixed 13 gauge panels across 4 dashboards
@@ -87,6 +87,12 @@ Access: http://localhost:3000 (admin/admin)
   - Resolved database initialization conflicts
   - Correct schema file ordering
   - Column name corrections
+
+- **[Grafana Provisioning Guide](../GRAFANA_PROVISIONING.md)** (8 KB)
+  - Complete Grafana provisioning reference
+  - Dashboard update procedures
+  - Troubleshooting stat vs table panels
+  - Security and verification checklists
 
 ## 🔧 Quick Reference
 

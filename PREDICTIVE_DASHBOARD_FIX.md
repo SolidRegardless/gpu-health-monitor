@@ -52,17 +52,32 @@ The GPU Predictive Analytics & Failure Forecast dashboard showed "No Data" in mu
 - `b2314e0 - Fix: Remove hardcoded GPU selection, simplify Failure Type panel`
 - `a8326aa - Fix: Add explicit default GPU selection with current value`
 
-### 3. Predicted Failure Type Panel - Incorrect Configuration
-**Issue**: Stat panel with complex column aliases wasn't displaying text values correctly.
+### 3. Predicted Failure Type Panel - Stat Panel Text Rendering Issue
+**Issue**: Stat panels in Grafana cannot reliably display text values from PostgreSQL queries.
 
-**Fix**: 
-- Changed query column alias to simple format
-- Added value mappings with emojis and colors
-- Configured `reduceOptions` for proper stat panel rendering
+**Root Cause**: Stat panels are designed for numeric metrics and use reduce functions (sum, mean, etc.). Text values like "thermal" and "power" are not properly rendered even with correct configuration.
+
+**Attempted Fixes** (all failed with stat panel):
+- Value mappings with emojis
+- `reduceOptions.values: true`
+- Different textMode settings
+- Various fieldConfig options
+
+**Final Solution**: Changed panel type from `stat` to `table` with stat-like styling:
+- `type: "table"` (instead of "stat")
+- `showHeader: false` (no column header)
+- `displayMode: "color-background"` (orange background fill)
+- `align: "center"` (centered text)
+- Query unchanged: `SELECT predicted_failure_type AS "Failure Type"`
+
+**Result**: Displays "thermal" or "power" text correctly with full-width orange background.
 
 **Commits**:
 - `0b60523 - Fix: Predicted Failure Type panel query format`
 - `4a15839 - Style: Add emoji icons and color mappings to Predicted Failure Type panel`
+- `76026a4 - Fix: Add reduceOptions.values=true for text field display`
+- `b0f13a9 - Fix: Change Predicted Failure Type to table panel`
+- `8b04d9c - Revert: Restore working Predicted Failure Type panel`
 
 ## Current Working State
 
