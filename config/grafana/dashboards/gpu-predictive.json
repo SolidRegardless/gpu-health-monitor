@@ -466,32 +466,20 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "semi-dark-orange",
+                "color": "orange",
                 "value": null
               }
             ]
           }
-        },
-        "overrides": []
+        }
       },
       "options": {
-        "reduceOptions": {
-          "values": false,
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": ""
-        },
-        "orientation": "horizontal",
-        "textMode": "value_and_name",
         "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "center"
+        "textMode": "value_and_name"
       }
     },
     {
