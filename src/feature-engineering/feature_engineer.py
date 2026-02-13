@@ -61,7 +61,9 @@ class GPUFeatureEngineer:
     
     def __init__(self):
         self.db_conn = None
+        self.table_columns = None
         self.connect_database()
+        self.load_table_schema()
     
     def connect_database(self):
         """Connect to database."""
@@ -82,7 +84,9 @@ class GPUFeatureEngineer:
                     password=DB_PASSWORD,
                     cursor_factory=RealDictCursor
                 )
-                logger.info("Connected to database successfully")
+                # Use autocommit for better error recovery
+                self.db_conn.autocommit = True
+                logger.info("Connected to database successfully (autocommit enabled)")
                 return
             except Exception as e:
                 logger.error(f"Database connection failed: {e}")
@@ -92,8 +96,27 @@ class GPUFeatureEngineer:
                 else:
                     raise
     
+    def load_table_schema(self):
+        """Load gpu_features table columns to filter features before saving."""
+        cursor = self.db_conn.cursor()
+        cursor.execute("""
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'gpu_features' 
+              AND column_name NOT IN ('time', 'gpu_uuid', 'feature_version', 'computed_at')
+            ORDER BY ordinal_position
+        """)
+        self.table_columns = set([row['column_name'] for row in cursor.fetchall()])
+        logger.info(f"Loaded {len(self.table_columns)} feature columns from gpu_features table schema")
+    
     def query_metrics(self, gpu_uuid: str, lookback_days: int = 7) -> pd.DataFrame:
         """Query raw metrics for a GPU including enhanced telemetry."""
+        # Ensure clean transaction state
+        try:
+            self.db_conn.rollback()
+        except:
+            pass
+            
         cursor = self.db_conn.cursor()
         
         lookback = datetime.now() - timedelta(days=lookback_days)
@@ -114,15 +137,11 @@ class GPUFeatureEngineer:
                 ecc_sbe_aggregate,
                 ecc_dbe_aggregate,
                 gpu_utilization,
-                memory_copy_utilization,
-                sm_clock,
-                memory_clock,
-                pcie_tx_throughput,
-                pcie_rx_throughput,
-                nvlink_tx_throughput,
-                nvlink_rx_throughput,
-                fan_speed,
-                total_energy_consumption
+                mem_copy_utilization,
+                sm_clock_mhz,
+                mem_clock_mhz,
+                pcie_tx_bytes_per_sec,
+                pcie_rx_bytes_per_sec
             FROM gpu_metrics
             WHERE gpu_uuid = %s
               AND time >= %s
@@ -283,24 +302,16 @@ class GPUFeatureEngineer:
         """Extract features from enhanced telemetry signals."""
         features = {}
         
-        # Fan speed features
-        if 'fan_speed' in metrics.columns and metrics['fan_speed'].notna().any():
-            features['fan_speed_mean'] = metrics['fan_speed'].mean()
-            features['fan_speed_max'] = metrics['fan_speed'].max()
-            features['fan_speed_std'] = metrics['fan_speed'].std()
-            
-            # High fan speed events (>80%)
-            features['high_fan_speed_pct'] = (metrics['fan_speed'] > 80).sum() / len(metrics) * 100
-        else:
-            features['fan_speed_mean'] = 0.0
-            features['fan_speed_max'] = 0.0
-            features['fan_speed_std'] = 0.0
-            features['high_fan_speed_pct'] = 0.0
+        # Fan speed features (not available in current schema)
+        features['fan_speed_mean'] = 0.0
+        features['fan_speed_max'] = 0.0
+        features['fan_speed_std'] = 0.0
+        features['high_fan_speed_pct'] = 0.0
         
         # Clock frequency features
-        if 'sm_clock' in metrics.columns and metrics['sm_clock'].notna().any():
-            features['sm_clock_mean'] = metrics['sm_clock'].mean()
-            features['sm_clock_std'] = metrics['sm_clock'].std()
+        if 'sm_clock_mhz' in metrics.columns and metrics['sm_clock_mhz'].notna().any():
+            features['sm_clock_mean'] = metrics['sm_clock_mhz'].mean()
+            features['sm_clock_std'] = metrics['sm_clock_mhz'].std()
             
             # Clock stability (inverse of coefficient of variation)
             mean_clock = features['sm_clock_mean']
@@ -315,15 +326,15 @@ class GPUFeatureEngineer:
             features['clock_stability'] = 1.0
         
         # Memory clock variation
-        if 'memory_clock' in metrics.columns and metrics['memory_clock'].notna().any():
-            features['memory_clock_std'] = metrics['memory_clock'].std()
+        if 'mem_clock_mhz' in metrics.columns and metrics['mem_clock_mhz'].notna().any():
+            features['memory_clock_std'] = metrics['mem_clock_mhz'].std()
         else:
             features['memory_clock_std'] = 0.0
         
         # PCIe bandwidth features
-        if 'pcie_rx_throughput' in metrics.columns and metrics['pcie_rx_throughput'].notna().any():
-            features['pcie_rx_mean_gbps'] = metrics['pcie_rx_throughput'].mean() / 1e9
-            features['pcie_tx_mean_gbps'] = metrics['pcie_tx_throughput'].mean() / 1e9 if 'pcie_tx_throughput' in metrics else 0.0
+        if 'pcie_rx_bytes_per_sec' in metrics.columns and metrics['pcie_rx_bytes_per_sec'].notna().any():
+            features['pcie_rx_mean_gbps'] = metrics['pcie_rx_bytes_per_sec'].mean() / 1e9
+            features['pcie_tx_mean_gbps'] = metrics['pcie_tx_bytes_per_sec'].mean() / 1e9 if 'pcie_tx_bytes_per_sec' in metrics else 0.0
             
             # PCIe bandwidth asymmetry (RX should typically be much higher for ML)
             rx_mean = features['pcie_rx_mean_gbps']
@@ -385,9 +396,9 @@ class GPUFeatureEngineer:
             features['ecc_dbe_rate_per_hour'] = 0.0
         
         # Memory copy utilization
-        if 'memory_copy_utilization' in metrics.columns and metrics['memory_copy_utilization'].notna().any():
-            features['memory_copy_util_mean'] = metrics['memory_copy_utilization'].mean()
-            features['memory_copy_util_max'] = metrics['memory_copy_utilization'].max()
+        if 'mem_copy_utilization' in metrics.columns and metrics['mem_copy_utilization'].notna().any():
+            features['memory_copy_util_mean'] = metrics['mem_copy_utilization'].mean()
+            features['memory_copy_util_max'] = metrics['mem_copy_utilization'].max()
         else:
             features['memory_copy_util_mean'] = 0.0
             features['memory_copy_util_max'] = 0.0
@@ -449,15 +460,23 @@ class GPUFeatureEngineer:
         """Save computed features to feature store."""
         cursor = self.db_conn.cursor()
         
-        # Convert numpy types to Python types
+        # Convert numpy types to Python types and filter to table columns
         cleaned_features = {}
+        skipped_features = []
         for key, value in features.items():
-            if isinstance(value, (np.integer, np.floating)):
-                cleaned_features[key] = float(value) if isinstance(value, np.floating) else int(value)
-            elif isinstance(value, (np.bool_)):
-                cleaned_features[key] = bool(value)
+            # Only include features that exist in the table schema
+            if key in self.table_columns:
+                if isinstance(value, (np.integer, np.floating)):
+                    cleaned_features[key] = float(value) if isinstance(value, np.floating) else int(value)
+                elif isinstance(value, (np.bool_)):
+                    cleaned_features[key] = bool(value)
+                else:
+                    cleaned_features[key] = value
             else:
-                cleaned_features[key] = value
+                skipped_features.append(key)
+        
+        if skipped_features:
+            logger.debug(f"Skipped {len(skipped_features)} features not in table schema: {', '.join(skipped_features[:5])}...")
         
         # Build column list dynamically
         columns = ['time', 'gpu_uuid'] + list(cleaned_features.keys())
@@ -506,11 +525,18 @@ class GPUFeatureEngineer:
                             self.save_features(gpu_uuid, features)
                     except Exception as e:
                         logger.error(f"Error processing GPU {gpu_uuid}: {e}", exc_info=True)
+                        # Rollback the transaction to prevent cascade failures
+                        self.db_conn.rollback()
                 
                 logger.info(f"Feature extraction cycle complete")
                 
             except Exception as e:
                 logger.error(f"Error in feature extraction cycle: {e}", exc_info=True)
+                # Rollback any failed transaction
+                try:
+                    self.db_conn.rollback()
+                except:
+                    pass
             
             logger.info(f"Sleeping for {FEATURE_INTERVAL}s")
             time.sleep(FEATURE_INTERVAL)
