@@ -2,6 +2,12 @@
 
 **Quick reference for deploying GPU Health Monitor on a fresh system**
 
+> **🔧 Recent Fixes Applied (2026-02-13):**
+> - **Schema initialization**: Removed conflicting `01_init_schema_multi_gpu.sql`, replaced with `07_init_multi_gpu_data.sql`
+> - **Datacenter gauges**: Added min/max configuration (0-100°C, 0-3000W) for filled progress bars
+> - **Query timing**: Added 30-second time filters to prevent empty gauge values
+> - See `DEPLOYMENT_FIX.md` and `DASHBOARD_GAUGE_FIX.md` for technical details
+
 ## Prerequisites
 
 - Docker Engine 20.10+
@@ -116,15 +122,15 @@ docker logs gpu-monitor-timescale-sink --tail 10
 
 ## 🎯 What Gets Auto-Provisioned
 
-### Database Schema (6 SQL files executed in order):
+### Database Schema (7 SQL files executed in order):
 
 1. **01_init_schema.sql** - Core tables (gpu_metrics, gpu_assets, etc.)
-2. **01_init_schema_multi_gpu.sql** - 5 GPU asset records
-3. **02_aggregates.sql** - Continuous aggregates (1min, 5min, 1hour)
-4. **03_anomalies.sql** - Anomaly detection tables
-5. **04_feature_store.sql** - ML feature store
-6. **05_economic_decisions.sql** - Economic engine tables
-7. **06_datacenter_mapping.sql** - Datacenter mapping + 5 GPU assignments
+2. **02_aggregates.sql** - Continuous aggregates (1min, 5min, 1hour)
+3. **03_anomalies.sql** - Anomaly detection tables
+4. **04_feature_store.sql** - ML feature store
+5. **05_economic_decisions.sql** - Economic engine tables
+6. **06_datacenter_mapping.sql** - Datacenter mapping schema
+7. **07_init_multi_gpu_data.sql** - Initial 5-GPU data (assets + datacenter mapping)
 
 ### Grafana Dashboards (6 auto-loaded):
 
