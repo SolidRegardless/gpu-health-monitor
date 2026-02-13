@@ -37,7 +37,9 @@
               }
             ]
           },
-          "unit": "none"
+          "unit": "none",
+          "min": 0,
+          "max": 100
         }
       },
       "gridPos": {

@@ -96,11 +96,32 @@ Without min/max, Grafana displays the numeric value but can't draw the filled ba
 
 ### Changes Applied
 
-**File Modified**: `config/grafana/dashboards/datacenter-overview.json`
+**Files Modified**:
+- `config/grafana/dashboards/datacenter-overview.json`
+- `config/grafana/dashboards/gpu-fleet-overview.json`
+- `config/grafana/dashboards/gpu-detail.json`
+- `config/grafana/dashboards/gpu-overview.json`
 
-**Panels Fixed**:
-1. **Avg Temperature** (gauge panel)
-2. **Total Power Consumption** (gauge panel)
+**Panels Fixed (Total: 13 gauges across 4 dashboards)**:
+
+**Datacenter Overview (3 gauges)**:
+1. Avg Temperature (0-100°C)
+2. Total Power Consumption (0-3000W)
+3. Avg GPU Utilization (0-100%)
+
+**GPU Fleet Overview (6 gauges)**:
+1. Avg GPU Temp (0-100°C)
+2. Max GPU Temp (0-100°C)
+3. Total Power Draw (0-3000W)
+4. Avg Utilization (0-100%)
+5. Total SBE Errors (0-1000 count)
+6. Total DBE Errors (0-100 count)
+
+**GPU Detail (1 gauge)**:
+1. GPU Utilization (0-100%)
+
+**GPU Overview (1 gauge)**:
+1. Overall Health Score (0-100%)
 
 **Changes Applied**:
 1. **Query Timing**: Added `AND time > NOW() - INTERVAL '30 seconds'` to WHERE clause

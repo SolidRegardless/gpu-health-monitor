@@ -14,17 +14,24 @@ All notable changes to the GPU Health Monitor project.
 - **Impact**: Fresh deployments now initialize cleanly without manual database fixes
 - **Details**: See `DEPLOYMENT_FIX.md`
 
-#### Datacenter Overview Dashboard Gauges
-- **Fixed**: Intermittent empty values in Avg Temperature and Total Power Consumption gauges
-- **Added**: 30-second time filter to queries (`AND time > NOW() - INTERVAL '30 seconds'`)
-- **Added**: Min/max configuration for filled progress bars:
-  - Avg Temperature: `min: 0, max: 100` (°C)
-  - Total Power: `min: 0, max: 3000` (W)
-- **Issue**: Gauges showed numbers but not filled bars, and sometimes showed blank values
-- **Root Cause**: 
-  1. Missing time filter caused race conditions during concurrent writes
-  2. Missing min/max prevented Grafana from rendering fill bars
-- **Impact**: Gauges now consistently show filled progress bars with proper colors
+#### Dashboard Gauge Visualization Fix (All Dashboards)
+- **Fixed**: Missing filled progress bars on all gauge panels across 4 dashboards
+- **Affected Dashboards**:
+  - Datacenter Overview (3 gauges fixed)
+  - GPU Fleet Overview (6 gauges fixed)
+  - GPU Detail (1 gauge fixed)
+  - GPU Overview (1 gauge fixed)
+- **Total**: 13 gauge panels fixed
+- **Added**: Min/max configuration for all gauges:
+  - Temperature gauges: `min: 0, max: 100` (°C)
+  - Memory temp gauge: `min: 0, max: 110` (°C)
+  - Power gauges: `min: 0, max: 400` (single GPU) or `max: 3000` (fleet total)
+  - Utilization/Health: `min: 0, max: 100` (%)
+  - Error counters: `min: 0, max: 1000` (SBE) or `max: 100` (DBE)
+- **Added**: 30-second time filter to datacenter aggregate queries
+- **Issue**: Gauges showed numeric values but not filled progress bars
+- **Root Cause**: Missing min/max configuration prevented Grafana from calculating fill percentage
+- **Impact**: All gauges now display filled progress bars with proper colors (green/yellow/red)
 - **Details**: See `DASHBOARD_GAUGE_FIX.md`
 
 ### Changed
@@ -47,10 +54,29 @@ schema/
 ```
 
 **Dashboard Changes**:
-- File: `config/grafana/dashboards/datacenter-overview.json`
-- Panels: Avg Temperature, Total Power Consumption
-- Query: Added time filter for consistency
-- Config: Added min/max for visual fill bars
+- Files: All 4 dashboards with gauge panels updated
+- Total panels fixed: 13 gauges
+- Query changes: Time filters added to datacenter aggregates
+- Config changes: Min/max added to all gauges
+
+**Gauge Ranges Configured**:
+```
+Temperature Gauges:
+  - GPU Temp: 0-100°C (typical range, safe max ~95°C)
+  - Memory Temp: 0-110°C (memory runs slightly hotter)
+
+Power Gauges:
+  - Single GPU: 0-400W (covers A100/H100 TDP)
+  - Fleet Total: 0-3000W (5 GPUs × 600W headroom)
+
+Utilization/Health:
+  - GPU Utilization: 0-100%
+  - Health Score: 0-100%
+
+Error Counters:
+  - SBE (Single-Bit): 0-1000 (accumulates slowly)
+  - DBE (Double-Bit): 0-100 (should be rare/critical)
+```
 
 **Deployment Scripts**:
 - ✅ No changes needed - scripts already correct
