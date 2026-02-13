@@ -500,7 +500,7 @@ class GPUFeatureEngineer:
                     gpu_uuid = gpu['gpu_uuid']
                     
                     try:
-                        features = self.extract_features(gpu_uuid, lookback_days=7)
+                        features = self.extract_features(gpu_uuid, lookback_days=0.02)
                         
                         if features:
                             self.save_features(gpu_uuid, features)

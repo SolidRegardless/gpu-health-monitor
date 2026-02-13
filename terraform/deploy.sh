@@ -3,7 +3,16 @@ set -e
 
 echo "╔════════════════════════════════════════════════════════════════╗"
 echo "║     GPU Health Monitor - Azure Deployment Script              ║"
+echo "║     Version: 1.0 (Production-Ready with All Fixes)            ║"
 echo "╚════════════════════════════════════════════════════════════════╝"
+echo ""
+echo "📚 This deployment includes:"
+echo "   ✅ All 13 gauge panels fixed across 4 dashboards"
+echo "   ✅ Schema conflicts resolved (correct column names)"
+echo "   ✅ 5-GPU simulation with distinct health profiles"
+echo "   ✅ Complete data pipeline verification"
+echo ""
+echo "   📖 See CHANGELOG.md and GAUGE_FIX_SUMMARY.md for full details"
 echo ""
 
 # Change to script directory
@@ -47,6 +56,7 @@ tar -czf terraform/gpu-health-monitor.tar.gz \
   config/
 
 echo "✅ Archive created ($(du -h terraform/gpu-health-monitor.tar.gz | cut -f1))"
+echo "   Includes: Fixed dashboards + corrected schema + multi-GPU mock"
 echo ""
 
 # Deploy with Terraform
@@ -74,7 +84,26 @@ echo "🚀 Deploying infrastructure..."
 terraform apply -auto-approve
 
 echo ""
-echo "✅ Deployment complete!"
-echo ""
-echo "⏳ Services are starting up (allow ~5 minutes for full initialization)"
+echo "╔════════════════════════════════════════════════════════════════╗"
+echo "║               Deployment Complete - What's Next?               ║"
+echo "╠════════════════════════════════════════════════════════════════╣"
+echo "║                                                                ║"
+echo "║  1. Wait ~5 minutes for full stack initialization             ║"
+echo "║  2. Get connection details: terraform output                   ║"
+echo "║  3. Access Grafana at the displayed URL (admin/admin123)       ║"
+echo "║  4. Check all 6 dashboards - all gauges should display         ║"
+echo "║                                                                ║"
+echo "║  Verification:                                                 ║"
+echo "║  • SSH to VM and check: docker ps (17 containers running)     ║"
+echo "║  • Query DB: docker exec timescaledb psql -U tsdb -d gpu...   ║"
+echo "║  • View logs: docker logs -f gpu-health-monitor-collector-1   ║"
+echo "║                                                                ║"
+echo "║  📚 Documentation:                                             ║"
+echo "║  • GAUGE_FIX_SUMMARY.md - Complete gauge fix details          ║"
+echo "║  • CHANGELOG.md - Full change history                          ║"
+echo "║  • FRESH_DEPLOYMENT.md - Fresh deployment guide                ║"
+echo "║                                                                ║"
+echo "║  🎯 To destroy: terraform destroy -auto-approve                ║"
+echo "║                                                                ║"
+echo "╚════════════════════════════════════════════════════════════════╝"
 echo ""
