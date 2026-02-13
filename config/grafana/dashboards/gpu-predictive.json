@@ -474,11 +474,7 @@
         "defaults": {
           "custom": {
             "align": "center",
-            "displayMode": "color-background",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "inspect": false
+            "displayMode": "color-background"
           },
           "thresholds": {
             "mode": "absolute",
@@ -489,15 +485,14 @@
               }
             ]
           }
-        },
-        "overrides": []
+        }
       },
       "options": {
         "showHeader": false,
         "footer": {
           "show": false
         },
-        "cellHeight": "lg"
+        "cellHeight": "xl"
       }
     },
     {
