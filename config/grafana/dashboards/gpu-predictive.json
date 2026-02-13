@@ -466,7 +466,33 @@
       ],
       "fieldConfig": {
         "defaults": {
-          "mappings": [],
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "thermal": {
+                  "text": "🔥 Thermal Failure",
+                  "color": "dark-orange"
+                },
+                "power": {
+                  "text": "⚡ Power Failure",
+                  "color": "dark-yellow"
+                },
+                "memory": {
+                  "text": "💾 Memory Failure",
+                  "color": "dark-red"
+                },
+                "ecc": {
+                  "text": "⚠️ ECC Errors",
+                  "color": "dark-purple"
+                },
+                "aging": {
+                  "text": "⏰ Component Aging",
+                  "color": "semi-dark-blue"
+                }
+              }
+            }
+          ],
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -479,6 +505,14 @@
         }
       },
       "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
         "textMode": "value",
         "colorMode": "background",
         "graphMode": "none",
