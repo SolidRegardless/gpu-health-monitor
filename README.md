@@ -1,3 +1,5 @@
+![GPU Health Monitor Banner](banner.png)
+
 # GPU Health Monitor
 
 **Production-grade health monitoring and predictive fault management system for NVIDIA A100/H100 GPU fleets**
