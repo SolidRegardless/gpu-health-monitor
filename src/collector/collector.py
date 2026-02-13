@@ -90,10 +90,9 @@ class DCGMCollector:
                     raise
     
     def parse_prometheus_metrics(self, text):
-        """Parse Prometheus format metrics from DCGM exporter."""
-        metrics = {}
-        gpu_uuid = None
-        gpu_model = None
+        """Parse Prometheus format metrics from DCGM exporter (multi-GPU support)."""
+        # Store metrics grouped by GPU UUID
+        gpus = {}
         
         for line in text.split('\n'):
             line = line.strip()
@@ -118,25 +117,37 @@ class DCGMCollector:
                             key, val = label_pair.split('=', 1)
                             labels[key.strip()] = val.strip(' "')
                     
-                    # Extract GPU UUID and model
-                    if 'UUID' in labels:
-                        gpu_uuid = labels['UUID']
-                    if 'modelName' in labels:
-                        gpu_model = labels['modelName']
+                    # Extract GPU UUID, model, and index
+                    gpu_uuid = labels.get('UUID')
+                    gpu_model = labels.get('modelName')
+                    gpu_index = int(labels.get('gpu', 0))
+                    
+                    if not gpu_uuid:
+                        continue
+                    
+                    # Initialize GPU entry if needed
+                    if gpu_uuid not in gpus:
+                        gpus[gpu_uuid] = {
+                            'metrics': {},
+                            'model': gpu_model,
+                            'index': gpu_index
+                        }
                     
                     # Extract value
                     value = float(value_parts[0])
                     
                     # Store metric
-                    metrics[metric_name] = value
+                    gpus[gpu_uuid]['metrics'][metric_name] = value
                     
             except Exception as e:
                 logger.warning(f"Failed to parse line: {line} - {e}")
                 continue
         
-        return metrics, gpu_uuid, gpu_model
+        # Return list of (metrics, uuid, model, index) tuples
+        return [(gpu_data['metrics'], gpu_uuid, gpu_data['model'], gpu_data['index']) 
+                for gpu_uuid, gpu_data in gpus.items()]
     
-    def build_metric_event(self, metrics, gpu_uuid, gpu_model):
+    def build_metric_event(self, metrics, gpu_uuid, gpu_model, device_index=0):
         """Build metric event in the format expected by the pipeline."""
         collection_time = datetime.now(timezone.utc)
         
@@ -150,11 +161,11 @@ class DCGMCollector:
             'gpu': {
                 'gpu_id': gpu_uuid.split('-')[1] if gpu_uuid else 'unknown',
                 'gpu_uuid': gpu_uuid or 'unknown',
-                'device_index': 0,
-                'pci_bus_id': '0000:3B:00.0',  # Mock value
+                'device_index': device_index,
+                'pci_bus_id': f'0000:{0x3B + device_index:02X}:00.0',  # Generate unique PCI bus IDs
                 'name': gpu_model or 'Unknown GPU',
-                'architecture': 'Ampere' if 'A100' in (gpu_model or '') else 'Unknown',
-                'compute_capability': '8.0' if 'A100' in (gpu_model or '') else '0.0'
+                'architecture': 'Ampere' if 'A100' in (gpu_model or '') else ('Hopper' if 'H100' in (gpu_model or '') else 'Unknown'),
+                'compute_capability': '8.0' if 'A100' in (gpu_model or '') else ('9.0' if 'H100' in (gpu_model or '') else '0.0')
             },
             
             'host': {
@@ -256,42 +267,47 @@ class DCGMCollector:
         return (used / total) * 100.0
     
     def collect_and_publish(self):
-        """Collect metrics from DCGM and publish to Kafka."""
+        """Collect metrics from DCGM and publish to Kafka (multi-GPU support)."""
         try:
             # Scrape DCGM exporter
             logger.debug(f"Scraping metrics from {DCGM_ENDPOINT}")
             response = requests.get(DCGM_ENDPOINT, timeout=5)
             response.raise_for_status()
             
-            # Parse metrics
-            metrics, gpu_uuid, gpu_model = self.parse_prometheus_metrics(response.text)
+            # Parse metrics (returns list of GPU data)
+            gpu_data_list = self.parse_prometheus_metrics(response.text)
             
-            if not metrics:
+            if not gpu_data_list:
                 logger.warning("No metrics parsed from DCGM exporter")
                 return
             
-            # Build event
-            event = self.build_metric_event(metrics, gpu_uuid, gpu_model)
+            logger.info(f"Scraped metrics for {len(gpu_data_list)} GPU(s)")
             
-            # Publish to Kafka
-            future = self.producer.send(
-                KAFKA_TOPIC,
-                key=gpu_uuid.encode('utf-8') if gpu_uuid else b'unknown',
-                value=event
-            )
-            
-            # Wait for send confirmation
-            record_metadata = future.get(timeout=10)
-            
-            logger.info(
-                f"Published metrics for GPU {gpu_uuid} to {record_metadata.topic} "
-                f"partition {record_metadata.partition} offset {record_metadata.offset}"
-            )
+            # Process each GPU
+            for metrics, gpu_uuid, gpu_model, device_index in gpu_data_list:
+                try:
+                    # Build event
+                    event = self.build_metric_event(metrics, gpu_uuid, gpu_model, device_index)
+                    
+                    # Publish to Kafka
+                    future = self.producer.send(
+                        KAFKA_TOPIC,
+                        key=gpu_uuid.encode('utf-8') if gpu_uuid else b'unknown',
+                        value=event
+                    )
+                    
+                    # Wait for send confirmation
+                    record_metadata = future.get(timeout=10)
+                    
+                    logger.info(
+                        f"Published metrics for GPU {device_index} ({gpu_uuid}) to {record_metadata.topic} "
+                        f"partition {record_metadata.partition} offset {record_metadata.offset}"
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to publish GPU {device_index} ({gpu_uuid}): {e}")
             
         except requests.RequestException as e:
             logger.error(f"Failed to scrape DCGM endpoint: {e}")
-        except KafkaError as e:
-            logger.error(f"Failed to publish to Kafka: {e}")
         except Exception as e:
             logger.error(f"Unexpected error: {e}", exc_info=True)
     
