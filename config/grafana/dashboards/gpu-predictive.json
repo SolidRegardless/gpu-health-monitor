@@ -442,7 +442,7 @@
     {
       "id": 5,
       "title": "Predicted Failure Type",
-      "type": "stat",
+      "type": "table",
       "gridPos": {
         "h": 4,
         "w": 6,
@@ -464,8 +464,18 @@
           "refId": "A"
         }
       ],
+      "options": {
+        "showHeader": false,
+        "footer": {
+          "show": false
+        }
+      },
       "fieldConfig": {
         "defaults": {
+          "custom": {
+            "align": "center",
+            "displayMode": "color-background"
+          },
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -475,16 +485,6 @@
               }
             ]
           }
-        }
-      },
-      "options": {
-        "colorMode": "background",
-        "textMode": "value_and_name",
-        "reduceOptions": {
-          "values": true,
-          "calcs": [
-            "lastNotNull"
-          ]
         }
       }
     },
