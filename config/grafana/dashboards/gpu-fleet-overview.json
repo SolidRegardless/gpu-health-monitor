@@ -1,0 +1,834 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "title": "GPU Detail",
+      "url": "/d/gpu-detail",
+      "type": "link"
+    }
+  ],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 100,
+      "options": {
+        "content": "# GPU Fleet Overview\n\n**Total GPUs:** 5 | **Monitoring:** Real-time health and performance across all GPU resources\n\nClick on individual GPU panels below to drill down, or use the [GPU Detail Dashboard](/d/gpu-detail) for in-depth analysis.",
+        "mode": "markdown"
+      },
+      "pluginVersion": "10.0.0",
+      "title": "Fleet Status",
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "celsius"
+        }
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 0,
+        "y": 4
+      },
+      "id": 1,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["mean"],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "P0D1C26D7DC78F49D"
+          },
+          "format": "table",
+          "rawSql": "SELECT AVG(gpu_temp) FROM (\n  SELECT DISTINCT ON (gpu_uuid) gpu_uuid, gpu_temp\n  FROM gpu_metrics\n  ORDER BY gpu_uuid, time DESC\n) AS latest",
+          "refId": "A"
+        }
+      ],
+      "title": "Avg GPU Temp",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 85
+              },
+              {
+                "color": "red",
+                "value": 95
+              }
+            ]
+          },
+          "unit": "celsius"
+        }
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 4,
+        "y": 4
+      },
+      "id": 2,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["max"],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "P0D1C26D7DC78F49D"
+          },
+          "format": "table",
+          "rawSql": "SELECT MAX(gpu_temp) FROM (\n  SELECT DISTINCT ON (gpu_uuid) gpu_uuid, gpu_temp\n  FROM gpu_metrics\n  ORDER BY gpu_uuid, time DESC\n) AS latest",
+          "refId": "A"
+        }
+      ],
+      "title": "Max GPU Temp",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1500
+              },
+              {
+                "color": "red",
+                "value": 1800
+              }
+            ]
+          },
+          "unit": "watt"
+        }
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 8,
+        "y": 4
+      },
+      "id": 3,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["sum"],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "P0D1C26D7DC78F49D"
+          },
+          "format": "table",
+          "rawSql": "SELECT SUM(power_usage) FROM (\n  SELECT DISTINCT ON (gpu_uuid) gpu_uuid, power_usage\n  FROM gpu_metrics\n  ORDER BY gpu_uuid, time DESC\n) AS latest",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Power Draw",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 50
+              },
+              {
+                "color": "green",
+                "value": 70
+              }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 12,
+        "y": 4
+      },
+      "id": 4,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["mean"],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "P0D1C26D7DC78F49D"
+          },
+          "format": "table",
+          "rawSql": "SELECT AVG(sm_active) FROM (\n  SELECT DISTINCT ON (gpu_uuid) gpu_uuid, sm_active\n  FROM gpu_metrics\n  ORDER BY gpu_uuid, time DESC\n) AS latest",
+          "refId": "A"
+        }
+      ],
+      "title": "Avg Utilization",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 100
+              },
+              {
+                "color": "red",
+                "value": 500
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 16,
+        "y": 4
+      },
+      "id": 5,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["sum"],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "P0D1C26D7DC78F49D"
+          },
+          "format": "table",
+          "rawSql": "SELECT SUM(ecc_sbe_aggregate) FROM (\n  SELECT DISTINCT ON (gpu_uuid) gpu_uuid, ecc_sbe_aggregate\n  FROM gpu_metrics\n  ORDER BY gpu_uuid, time DESC\n) AS latest",
+          "refId": "A"
+        }
+      ],
+      "title": "Total SBE Errors",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 20,
+        "y": 4
+      },
+      "id": 6,
+      "options": {
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": ["sum"],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "P0D1C26D7DC78F49D"
+          },
+          "format": "table",
+          "rawSql": "SELECT SUM(ecc_dbe_aggregate) FROM (\n  SELECT DISTINCT ON (gpu_uuid) gpu_uuid, ecc_dbe_aggregate\n  FROM gpu_metrics\n  ORDER BY gpu_uuid, time DESC\n) AS latest",
+          "refId": "A"
+        }
+      ],
+      "title": "Total DBE Errors",
+      "type": "gauge"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "none",
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 3,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "celsius"
+        }
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 9
+      },
+      "id": 10,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "P0D1C26D7DC78F49D"
+          },
+          "format": "time_series",
+          "rawSql": "SELECT \n  time,\n  MAX(CASE WHEN gpu_uuid = 'GPU-abc123def456' THEN gpu_temp END) AS \"GPU-abc123def456 (healthy)\",\n  MAX(CASE WHEN gpu_uuid = 'GPU-def456abc789' THEN gpu_temp END) AS \"GPU-def456abc789 (high_temp)\",\n  MAX(CASE WHEN gpu_uuid = 'GPU-ghi789jkl012' THEN gpu_temp END) AS \"GPU-ghi789jkl012 (power_hungry)\",\n  MAX(CASE WHEN gpu_uuid = 'GPU-mno345pqr678' THEN gpu_temp END) AS \"GPU-mno345pqr678 (aging)\",\n  MAX(CASE WHEN gpu_uuid = 'GPU-stu901vwx234' THEN gpu_temp END) AS \"GPU-stu901vwx234 (excellent)\"\nFROM gpu_metrics\nWHERE $__timeFilter(time)\nGROUP BY time\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "GPU Temperature - All GPUs",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "none",
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 3,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "watt"
+        }
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 9
+      },
+      "id": 11,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "P0D1C26D7DC78F49D"
+          },
+          "format": "time_series",
+          "rawSql": "SELECT \n  time,\n  MAX(CASE WHEN gpu_uuid = 'GPU-abc123def456' THEN power_usage END) AS \"GPU-abc123def456 (healthy)\",\n  MAX(CASE WHEN gpu_uuid = 'GPU-def456abc789' THEN power_usage END) AS \"GPU-def456abc789 (high_temp)\",\n  MAX(CASE WHEN gpu_uuid = 'GPU-ghi789jkl012' THEN power_usage END) AS \"GPU-ghi789jkl012 (power_hungry)\",\n  MAX(CASE WHEN gpu_uuid = 'GPU-mno345pqr678' THEN power_usage END) AS \"GPU-mno345pqr678 (aging)\",\n  MAX(CASE WHEN gpu_uuid = 'GPU-stu901vwx234' THEN power_usage END) AS \"GPU-stu901vwx234 (excellent)\"\nFROM gpu_metrics\nWHERE $__timeFilter(time)\nGROUP BY time\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "Power Usage - All GPUs",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "none",
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 3,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": true
+          },
+          "mappings": [],
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 18
+      },
+      "id": 12,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "P0D1C26D7DC78F49D"
+          },
+          "format": "time_series",
+          "rawSql": "SELECT \n  time,\n  MAX(CASE WHEN gpu_uuid = 'GPU-abc123def456' THEN sm_active END) AS \"GPU-abc123def456 (healthy)\",\n  MAX(CASE WHEN gpu_uuid = 'GPU-def456abc789' THEN sm_active END) AS \"GPU-def456abc789 (high_temp)\",\n  MAX(CASE WHEN gpu_uuid = 'GPU-ghi789jkl012' THEN sm_active END) AS \"GPU-ghi789jkl012 (power_hungry)\",\n  MAX(CASE WHEN gpu_uuid = 'GPU-mno345pqr678' THEN sm_active END) AS \"GPU-mno345pqr678 (aging)\",\n  MAX(CASE WHEN gpu_uuid = 'GPU-stu901vwx234' THEN sm_active END) AS \"GPU-stu901vwx234 (excellent)\"\nFROM gpu_metrics\nWHERE $__timeFilter(time)\nGROUP BY time\nORDER BY time",
+          "refId": "A"
+        }
+      ],
+      "title": "GPU Utilization - All GPUs",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "gpu_temp"
+            },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 70
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "memory_temp"
+            },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 85
+                    },
+                    {
+                      "color": "red",
+                      "value": 95
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "utilization"
+            },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 30
+                    },
+                    {
+                      "color": "green",
+                      "value": 60
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 18
+      },
+      "id": 13,
+      "options": {
+        "footer": {
+          "fields": "",
+          "reducer": ["sum"],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": true,
+            "displayName": "gpu_temp"
+          }
+        ]
+      },
+      "pluginVersion": "10.0.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "P0D1C26D7DC78F49D"
+          },
+          "format": "table",
+          "rawSql": "SELECT \n  gpu_uuid,\n  ROUND(gpu_temp::numeric, 1) as gpu_temp,\n  ROUND(memory_temp::numeric, 1) as memory_temp,\n  ROUND(power_usage::numeric, 1) as power_usage,\n  ROUND(sm_active::numeric, 1) as utilization,\n  ecc_sbe_aggregate as sbe_errors,\n  ecc_dbe_aggregate as dbe_errors\nFROM (\n  SELECT DISTINCT ON (gpu_uuid) *\n  FROM gpu_metrics\n  ORDER BY gpu_uuid, time DESC\n) AS latest\nORDER BY gpu_temp DESC",
+          "refId": "A"
+        }
+      ],
+      "title": "Current GPU Status (Sorted by Temperature)",
+      "type": "table"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["gpu", "fleet", "overview"],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "GPU Fleet Overview",
+  "uid": "gpu-fleet-overview",
+  "version": 1
+}

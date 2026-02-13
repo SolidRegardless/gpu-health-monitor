@@ -67,7 +67,7 @@
             "uid": "P0D1C26D7DC78F49D"
           },
           "format": "table",
-          "rawSql": "SELECT overall_score FROM gpu_health_scores ORDER BY time DESC LIMIT 1",
+          "rawSql": "SELECT overall_score FROM gpu_health_scores WHERE gpu_uuid = '$gpu_uuid' ORDER BY time DESC LIMIT 1",
           "refId": "A"
         }
       ],
@@ -154,7 +154,7 @@
             "uid": "P0D1C26D7DC78F49D"
           },
           "format": "time_series",
-          "rawSql": "SELECT time, gpu_temp as \"GPU Temp\", memory_temp as \"Memory Temp\" FROM gpu_metrics WHERE $__timeFilter(time) ORDER BY time",
+          "rawSql": "SELECT time AS \"time\", gpu_temp as \"GPU Temp\", memory_temp as \"Memory Temp\" FROM gpu_metrics WHERE gpu_uuid = '$gpu_uuid' AND $__timeFilter(time) ORDER BY time",
           "refId": "A"
         }
       ],
@@ -241,7 +241,7 @@
             "uid": "P0D1C26D7DC78F49D"
           },
           "format": "time_series",
-          "rawSql": "SELECT time, power_usage as \"Power Usage\" FROM gpu_metrics WHERE $__timeFilter(time) ORDER BY time",
+          "rawSql": "SELECT time AS \"time\", power_usage as \"Power Usage\" FROM gpu_metrics WHERE gpu_uuid = '$gpu_uuid' AND $__timeFilter(time) ORDER BY time",
           "refId": "A"
         }
       ],
@@ -330,7 +330,7 @@
             "uid": "P0D1C26D7DC78F49D"
           },
           "format": "time_series",
-          "rawSql": "SELECT time, sm_active as \"SM Active\", memory_utilization as \"Memory Util\", tensor_active as \"Tensor Active\" FROM gpu_metrics WHERE $__timeFilter(time) ORDER BY time",
+          "rawSql": "SELECT time AS \"time\", sm_active as \"SM Active\", memory_utilization as \"Memory Util\", tensor_active as \"Tensor Active\" FROM gpu_metrics WHERE gpu_uuid = '$gpu_uuid' AND $__timeFilter(time) ORDER BY time",
           "refId": "A"
         }
       ],
@@ -419,7 +419,7 @@
             "uid": "P0D1C26D7DC78F49D"
           },
           "format": "time_series",
-          "rawSql": "SELECT time, memory_health as \"Memory\", thermal_health as \"Thermal\", performance_health as \"Performance\", power_health as \"Power\", reliability_health as \"Reliability\" FROM gpu_health_scores WHERE $__timeFilter(time) ORDER BY time",
+          "rawSql": "SELECT time AS \"time\", memory_health as \"Memory\", thermal_health as \"Thermal\", performance_health as \"Performance\", power_health as \"Power\", reliability_health as \"Reliability\" FROM gpu_health_scores WHERE gpu_uuid = '$gpu_uuid' AND $__timeFilter(time) ORDER BY time",
           "refId": "A"
         }
       ],
@@ -436,7 +436,27 @@
     "monitoring"
   ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {},
+        "datasource": {
+          "type": "postgres",
+          "uid": "P0D1C26D7DC78F49D"
+        },
+        "definition": "SELECT DISTINCT gpu_uuid FROM gpu_metrics ORDER BY gpu_uuid",
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "gpu_uuid",
+        "options": [],
+        "query": "SELECT DISTINCT gpu_uuid FROM gpu_metrics ORDER BY gpu_uuid",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
   },
   "time": {
     "from": "now-1h",

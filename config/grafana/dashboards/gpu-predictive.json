@@ -1,388 +1,676 @@
 {
-  "dashboard": {
-    "title": "GPU Predictive Analytics & Failure Forecast",
-    "uid": "gpu-predictive",
-    "timezone": "browser",
-    "schemaVersion": 36,
-    "version": 1,
-    "refresh": "30s",
-    "tags": ["gpu", "ml", "prediction", "failure"],
-    "time": {
-      "from": "now-6h",
-      "to": "now"
-    },
-    "panels": [
+  "title": "GPU Predictive Analytics & Failure Forecast",
+  "uid": "gpu-predictive",
+  "timezone": "browser",
+  "schemaVersion": 36,
+  "version": 2,
+  "refresh": "30s",
+  "tags": [
+    "gpu",
+    "ml",
+    "prediction",
+    "failure"
+  ],
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
       {
-        "id": 1,
-        "title": "Failure Probability Forecast",
-        "type": "timeseries",
-        "gridPos": {"h": 9, "w": 12, "x": 0, "y": 0},
+        "current": {},
         "datasource": {
           "type": "postgres",
           "uid": "P0D1C26D7DC78F49D"
         },
-        "targets": [
-          {
-            "datasource": {"type": "postgres", "uid": "P0D1C26D7DC78F49D"},
-            "rawSql": "SELECT\n  time AS \"time\",\n  failure_prob_7d * 100 AS \"7-Day Risk %\",\n  failure_prob_30d * 100 AS \"30-Day Risk %\",\n  failure_prob_90d * 100 AS \"90-Day Risk %\"\nFROM gpu_failure_predictions\nWHERE time > NOW() - INTERVAL '6 hours'\nORDER BY time",
-            "format": "time_series",
-            "refId": "A"
-          }
-        ],
-        "fieldConfig": {
-          "defaults": {
-            "unit": "percent",
-            "max": 100,
-            "min": 0,
-            "color": {"mode": "palette-classic"},
-            "custom": {
-              "lineWidth": 2,
-              "fillOpacity": 10,
-              "gradientMode": "opacity",
-              "showPoints": "auto"
-            },
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {"color": "green", "value": null},
-                {"color": "yellow", "value": 20},
-                {"color": "orange", "value": 50},
-                {"color": "red", "value": 80}
-              ]
-            }
-          },
-          "overrides": [
-            {
-              "matcher": {"id": "byName", "options": "7-Day Risk %"},
-              "properties": [
-                {"id": "color", "value": {"mode": "fixed", "fixedColor": "red"}},
-                {"id": "custom.lineStyle", "value": {"fill": "solid"}}
-              ]
-            },
-            {
-              "matcher": {"id": "byName", "options": "30-Day Risk %"},
-              "properties": [
-                {"id": "color", "value": {"mode": "fixed", "fixedColor": "orange"}},
-                {"id": "custom.lineStyle", "value": {"fill": "dash", "dash": [10, 5]}}
-              ]
-            },
-            {
-              "matcher": {"id": "byName", "options": "90-Day Risk %"},
-              "properties": [
-                {"id": "color", "value": {"mode": "fixed", "fixedColor": "yellow"}},
-                {"id": "custom.lineStyle", "value": {"fill": "dash", "dash": [5, 5]}}
-              ]
-            }
-          ]
-        },
-        "options": {
-          "legend": {
-            "showLegend": true,
-            "displayMode": "list",
-            "placement": "bottom"
-          },
-          "tooltip": {"mode": "multi", "sort": "none"}
-        }
-      },
-      {
-        "id": 2,
-        "title": "Health Score: Current vs Predicted Trend",
-        "type": "timeseries",
-        "gridPos": {"h": 9, "w": 12, "x": 12, "y": 0},
-        "datasource": {
-          "type": "postgres",
-          "uid": "P0D1C26D7DC78F49D"
-        },
-        "targets": [
-          {
-            "datasource": {"type": "postgres", "uid": "P0D1C26D7DC78F49D"},
-            "rawSql": "SELECT\n  time AS \"time\",\n  overall_score AS \"Current Health Score\"\nFROM gpu_health_scores\nWHERE time > NOW() - INTERVAL '6 hours'\nORDER BY time",
-            "format": "time_series",
-            "refId": "A"
-          },
-          {
-            "datasource": {"type": "postgres", "uid": "P0D1C26D7DC78F49D"},
-            "rawSql": "WITH latest AS (\n  SELECT overall_score, time\n  FROM gpu_health_scores\n  ORDER BY time DESC\n  LIMIT 1\n),\ntrend AS (\n  SELECT \n    REGR_SLOPE(overall_score, EXTRACT(EPOCH FROM time)) * 3600 AS hourly_change\n  FROM gpu_health_scores\n  WHERE time > NOW() - INTERVAL '6 hours'\n)\nSELECT\n  time + INTERVAL '1 hour' * s AS \"time\",\n  overall_score + (hourly_change * s) AS \"Predicted (Linear)\"\nFROM latest, trend, generate_series(0, 24) s\nWHERE time + INTERVAL '1 hour' * s <= NOW() + INTERVAL '24 hours'",
-            "format": "time_series",
-            "refId": "B"
-          }
-        ],
-        "fieldConfig": {
-          "defaults": {
-            "unit": "none",
-            "max": 100,
-            "min": 0,
-            "custom": {"lineWidth": 2, "fillOpacity": 10}
-          },
-          "overrides": [
-            {
-              "matcher": {"id": "byName", "options": "Current Health Score"},
-              "properties": [
-                {"id": "color", "value": {"mode": "fixed", "fixedColor": "blue"}},
-                {"id": "custom.lineWidth", "value": 3}
-              ]
-            },
-            {
-              "matcher": {"id": "byName", "options": "Predicted (Linear)"},
-              "properties": [
-                {"id": "color", "value": {"mode": "fixed", "fixedColor": "purple"}},
-                {"id": "custom.lineStyle", "value": {"fill": "dash", "dash": [10, 5]}},
-                {"id": "custom.fillOpacity", "value": 5}
-              ]
-            }
-          ]
-        }
-      },
-      {
-        "id": 3,
-        "title": "Temperature: Actual + Trend Forecast",
-        "type": "timeseries",
-        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 9},
-        "datasource": {
-          "type": "postgres",
-          "uid": "P0D1C26D7DC78F49D"
-        },
-        "targets": [
-          {
-            "datasource": {"type": "postgres", "uid": "P0D1C26D7DC78F49D"},
-            "rawSql": "SELECT\n  time AS \"time\",\n  gpu_temp AS \"Actual Temperature\"\nFROM gpu_metrics\nWHERE time > NOW() - INTERVAL '1 hour'\nORDER BY time",
-            "format": "time_series",
-            "refId": "A"
-          },
-          {
-            "datasource": {"type": "postgres", "uid": "P0D1C26D7DC78F49D"},
-            "rawSql": "WITH latest AS (\n  SELECT gpu_temp, time\n  FROM gpu_metrics\n  ORDER BY time DESC\n  LIMIT 1\n),\ntrend AS (\n  SELECT \n    REGR_SLOPE(gpu_temp, EXTRACT(EPOCH FROM time)) * 60 AS per_minute_change,\n    STDDEV(gpu_temp) AS volatility\n  FROM gpu_metrics\n  WHERE time > NOW() - INTERVAL '30 minutes'\n)\nSELECT\n  time + INTERVAL '1 minute' * s AS \"time\",\n  gpu_temp + (per_minute_change * s) AS \"Predicted Temp (30min)\"\nFROM latest, trend, generate_series(0, 30) s",
-            "format": "time_series",
-            "refId": "B"
-          }
-        ],
-        "fieldConfig": {
-          "defaults": {
-            "unit": "celsius",
-            "custom": {"lineWidth": 2}
-          },
-          "overrides": [
-            {
-              "matcher": {"id": "byName", "options": "Actual Temperature"},
-              "properties": [
-                {"id": "color", "value": {"mode": "fixed", "fixedColor": "blue"}},
-                {"id": "custom.fillOpacity", "value": 20}
-              ]
-            },
-            {
-              "matcher": {"id": "byName", "options": "Predicted Temp (30min)"},
-              "properties": [
-                {"id": "color", "value": {"mode": "fixed", "fixedColor": "red"}},
-                {"id": "custom.lineStyle", "value": {"fill": "dash", "dash": [8, 4]}},
-                {"id": "custom.fillOpacity", "value": 5}
-              ]
-            }
-          ]
-        }
-      },
-      {
-        "id": 4,
-        "title": "ML Model Confidence & Prediction Type",
-        "type": "stat",
-        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 9},
-        "datasource": {
-          "type": "postgres",
-          "uid": "P0D1C26D7DC78F49D"
-        },
-        "targets": [
-          {
-            "datasource": {"type": "postgres", "uid": "P0D1C26D7DC78F49D"},
-            "rawSql": "SELECT \n  confidence * 100 AS \"Model Confidence %\"\nFROM gpu_failure_predictions \nORDER BY time DESC \nLIMIT 1",
-            "format": "table",
-            "refId": "A"
-          }
-        ],
-        "fieldConfig": {
-          "defaults": {
-            "unit": "percent",
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {"color": "red", "value": null},
-                {"color": "yellow", "value": 60},
-                {"color": "green", "value": 80}
-              ]
-            }
-          }
-        },
-        "options": {
-          "textMode": "value_and_name",
-          "colorMode": "background"
-        }
-      },
-      {
-        "id": 5,
-        "title": "Predicted Failure Type",
-        "type": "stat",
-        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 9},
-        "datasource": {
-          "type": "postgres",
-          "uid": "P0D1C26D7DC78F49D"
-        },
-        "targets": [
-          {
-            "datasource": {"type": "postgres", "uid": "P0D1C26D7DC78F49D"},
-            "rawSql": "SELECT \n  predicted_failure_type AS \"Predicted Failure Type\"\nFROM gpu_failure_predictions \nORDER BY time DESC \nLIMIT 1",
-            "format": "table",
-            "refId": "A"
-          }
-        ],
-        "options": {
-          "textMode": "value_and_name",
-          "colorMode": "value",
-          "graphMode": "none"
-        }
-      },
-      {
-        "id": 6,
-        "title": "Estimated Time to Failure",
-        "type": "stat",
-        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 13},
-        "datasource": {
-          "type": "postgres",
-          "uid": "P0D1C26D7DC78F49D"
-        },
-        "targets": [
-          {
-            "datasource": {"type": "postgres", "uid": "P0D1C26D7DC78F49D"},
-            "rawSql": "SELECT \n  estimated_ttf_days AS \"Days Until Failure\"\nFROM gpu_failure_predictions \nORDER BY time DESC \nLIMIT 1",
-            "format": "table",
-            "refId": "A"
-          }
-        ],
-        "fieldConfig": {
-          "defaults": {
-            "unit": "days",
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {"color": "red", "value": null},
-                {"color": "orange", "value": 30},
-                {"color": "yellow", "value": 90},
-                {"color": "green", "value": 180}
-              ]
-            }
-          }
-        },
-        "options": {
-          "textMode": "value_and_name",
-          "colorMode": "background"
-        }
-      },
-      {
-        "id": 7,
-        "title": "Anomaly Detection (Last Hour)",
-        "type": "stat",
-        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 13},
-        "datasource": {
-          "type": "postgres",
-          "uid": "P0D1C26D7DC78F49D"
-        },
-        "targets": [
-          {
-            "datasource": {"type": "postgres", "uid": "P0D1C26D7DC78F49D"},
-            "rawSql": "SELECT \n  COUNT(*) AS \"Anomalies Detected\"\nFROM anomalies \nWHERE detected_at > NOW() - INTERVAL '1 hour'",
-            "format": "table",
-            "refId": "A"
-          }
-        ],
-        "fieldConfig": {
-          "defaults": {
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {"color": "green", "value": null},
-                {"color": "yellow", "value": 5},
-                {"color": "orange", "value": 10},
-                {"color": "red", "value": 20}
-              ]
-            }
-          }
-        },
-        "options": {
-          "textMode": "value_and_name",
-          "colorMode": "background"
-        }
-      },
-      {
-        "id": 8,
-        "title": "Health Score Components (Current vs Baseline)",
-        "type": "barchart",
-        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 17},
-        "datasource": {
-          "type": "postgres",
-          "uid": "P0D1C26D7DC78F49D"
-        },
-        "targets": [
-          {
-            "datasource": {"type": "postgres", "uid": "P0D1C26D7DC78F49D"},
-            "rawSql": "WITH current AS (\n  SELECT\n    'Thermal' as component, thermal_health as score\n  FROM gpu_health_scores\n  ORDER BY time DESC LIMIT 1\n  UNION ALL\n  SELECT 'Memory', memory_health\n  FROM gpu_health_scores\n  ORDER BY time DESC LIMIT 1\n  UNION ALL\n  SELECT 'Performance', performance_health\n  FROM gpu_health_scores\n  ORDER BY time DESC LIMIT 1\n  UNION ALL\n  SELECT 'Power', power_health\n  FROM gpu_health_scores\n  ORDER BY time DESC LIMIT 1\n  UNION ALL\n  SELECT 'Reliability', reliability_health\n  FROM gpu_health_scores\n  ORDER BY time DESC LIMIT 1\n)\nSELECT component AS \"Component\", score AS \"Current Score\", 85.0 AS \"Baseline (Good)\"\nFROM current",
-            "format": "table",
-            "refId": "A"
-          }
-        ],
-        "options": {
-          "orientation": "horizontal",
-          "showValue": "always",
-          "legend": {
-            "showLegend": true,
-            "displayMode": "list",
-            "placement": "bottom"
-          }
-        },
-        "fieldConfig": {
-          "defaults": {
-            "unit": "none",
-            "max": 100,
-            "min": 0
-          }
-        }
-      },
-      {
-        "id": 9,
-        "title": "Anomaly Timeline (Last 6 Hours)",
-        "type": "timeseries",
-        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 17},
-        "datasource": {
-          "type": "postgres",
-          "uid": "P0D1C26D7DC78F49D"
-        },
-        "targets": [
-          {
-            "datasource": {"type": "postgres", "uid": "P0D1C26D7DC78F49D"},
-            "rawSql": "SELECT\n  detected_at AS \"time\",\n  CASE severity\n    WHEN 'low' THEN 1\n    WHEN 'medium' THEN 2\n    WHEN 'high' THEN 3\n    WHEN 'critical' THEN 4\n  END AS \"Severity Level\"\nFROM anomalies\nWHERE detected_at > NOW() - INTERVAL '6 hours'\nORDER BY detected_at",
-            "format": "time_series",
-            "refId": "A"
-          }
-        ],
-        "fieldConfig": {
-          "defaults": {
-            "custom": {
-              "drawStyle": "points",
-              "pointSize": 8,
-              "showPoints": "always"
-            },
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {"color": "green", "value": null},
-                {"color": "yellow", "value": 2},
-                {"color": "orange", "value": 3},
-                {"color": "red", "value": 4}
-              ]
-            }
-          }
-        },
-        "options": {
-          "legend": {"showLegend": false}
-        }
+        "definition": "SELECT DISTINCT gpu_uuid FROM gpu_metrics ORDER BY gpu_uuid",
+        "hide": 0,
+        "includeAll": false,
+        "multi": false,
+        "name": "gpu_uuid",
+        "options": [],
+        "query": "SELECT DISTINCT gpu_uuid FROM gpu_metrics ORDER BY gpu_uuid",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
       }
     ]
   },
-  "overwrite": true
+  "panels": [
+    {
+      "id": 1,
+      "title": "Failure Probability Forecast",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "P0D1C26D7DC78F49D"
+          },
+          "rawSql": "SELECT\n  time AS \"time\",\n  failure_prob_7d * 100 AS \"7-Day Risk %\",\n  failure_prob_30d * 100 AS \"30-Day Risk %\",\n  failure_prob_90d * 100 AS \"90-Day Risk %\"\nFROM gpu_failure_predictions\nWHERE gpu_uuid = '$gpu_uuid' AND $__timeFilter(time)\nORDER BY time",
+          "format": "time_series",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "max": 100,
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
+            "showPoints": "auto"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 20
+              },
+              {
+                "color": "orange",
+                "value": 50
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "7-Day Risk %"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "solid"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "30-Day Risk %"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "dash",
+                  "dash": [
+                    10,
+                    5
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "90-Day Risk %"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "yellow"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "dash",
+                  "dash": [
+                    5,
+                    5
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Health Score: Current vs Predicted Trend",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "P0D1C26D7DC78F49D"
+          },
+          "rawSql": "SELECT\n  time AS \"time\",\n  overall_score AS \"Current Health Score\"\nFROM gpu_health_scores\nWHERE gpu_uuid = '$gpu_uuid' AND $__timeFilter(time)\nORDER BY time",
+          "format": "time_series",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "P0D1C26D7DC78F49D"
+          },
+          "rawSql": "WITH latest AS (\n  SELECT overall_score, time\n  FROM gpu_health_scores\n  WHERE gpu_uuid = '$gpu_uuid'\n  ORDER BY time DESC\n  LIMIT 1\n),\ntrend AS (\n  SELECT \n    REGR_SLOPE(overall_score, EXTRACT(EPOCH FROM time)) * 3600 AS hourly_change\n  FROM gpu_health_scores\n  WHERE gpu_uuid = '$gpu_uuid' AND time > NOW() - INTERVAL '6 hours'\n)\nSELECT\n  time + INTERVAL '1 hour' * s AS \"time\",\n  overall_score + (hourly_change * s) AS \"Predicted (Linear)\"\nFROM latest, trend, generate_series(0, 24) s\nWHERE time + INTERVAL '1 hour' * s <= NOW() + INTERVAL '24 hours'",
+          "format": "time_series",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "max": 100,
+          "min": 0,
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Current Health Score"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 3
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Predicted (Linear)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "purple"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "dash",
+                  "dash": [
+                    10,
+                    5
+                  ]
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 5
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "title": "Temperature: Actual + Trend Forecast",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 9
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "P0D1C26D7DC78F49D"
+          },
+          "rawSql": "SELECT\n  time AS \"time\",\n  gpu_temp AS \"Actual Temperature\"\nFROM gpu_metrics\nWHERE gpu_uuid = '$gpu_uuid' AND time > NOW() - INTERVAL '1 hour'\nORDER BY time",
+          "format": "time_series",
+          "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "P0D1C26D7DC78F49D"
+          },
+          "rawSql": "WITH latest AS (\n  SELECT gpu_temp, time\n  FROM gpu_metrics\n  WHERE gpu_uuid = '$gpu_uuid'\n  ORDER BY time DESC\n  LIMIT 1\n),\ntrend AS (\n  SELECT \n    REGR_SLOPE(gpu_temp, EXTRACT(EPOCH FROM time)) * 60 AS per_minute_change,\n    STDDEV(gpu_temp) AS volatility\n  FROM gpu_metrics\n  WHERE gpu_uuid = '$gpu_uuid' AND time > NOW() - INTERVAL '30 minutes'\n)\nSELECT\n  time + INTERVAL '1 minute' * s AS \"time\",\n  gpu_temp + (per_minute_change * s) AS \"Predicted Temp (30min)\"\nFROM latest, trend, generate_series(0, 30) s",
+          "format": "time_series",
+          "refId": "B"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "custom": {
+            "lineWidth": 2
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Actual Temperature"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "blue"
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 20
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Predicted Temp (30min)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "dash",
+                  "dash": [
+                    8,
+                    4
+                  ]
+                }
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 5
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "title": "ML Model Confidence & Prediction Type",
+      "type": "stat",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 9
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "P0D1C26D7DC78F49D"
+          },
+          "rawSql": "SELECT \n  confidence * 100 AS \"Model Confidence %\"\nFROM gpu_failure_predictions \nWHERE gpu_uuid = '$gpu_uuid'\nORDER BY time DESC \nLIMIT 1",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 60
+              },
+              {
+                "color": "green",
+                "value": 80
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "textMode": "value_and_name",
+        "colorMode": "background"
+      }
+    },
+    {
+      "id": 5,
+      "title": "Predicted Failure Type",
+      "type": "stat",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 9
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "P0D1C26D7DC78F49D"
+          },
+          "rawSql": "SELECT \n  predicted_failure_type AS \"Predicted Failure Type\"\nFROM gpu_failure_predictions \nWHERE gpu_uuid = '$gpu_uuid'\nORDER BY time DESC \nLIMIT 1",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "textMode": "value_and_name",
+        "colorMode": "value",
+        "graphMode": "none"
+      }
+    },
+    {
+      "id": 6,
+      "title": "Estimated Time to Failure",
+      "type": "stat",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 13
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "P0D1C26D7DC78F49D"
+          },
+          "rawSql": "SELECT \n  estimated_ttf_days AS \"Days Until Failure\"\nFROM gpu_failure_predictions \nWHERE gpu_uuid = '$gpu_uuid'\nORDER BY time DESC \nLIMIT 1",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "days",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 30
+              },
+              {
+                "color": "yellow",
+                "value": 90
+              },
+              {
+                "color": "green",
+                "value": 180
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "textMode": "value_and_name",
+        "colorMode": "background"
+      }
+    },
+    {
+      "id": 7,
+      "title": "Anomaly Detection (Last Hour)",
+      "type": "stat",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 13
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "P0D1C26D7DC78F49D"
+          },
+          "rawSql": "SELECT \n  COUNT(*) AS \"Anomalies Detected\"\nFROM anomalies \nWHERE gpu_uuid = '$gpu_uuid' AND detected_at > NOW() - INTERVAL '1 hour'",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 5
+              },
+              {
+                "color": "orange",
+                "value": 10
+              },
+              {
+                "color": "red",
+                "value": 20
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "textMode": "value_and_name",
+        "colorMode": "background"
+      }
+    },
+    {
+      "id": 8,
+      "title": "Health Score Components (Current vs Baseline)",
+      "type": "barchart",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 17
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "P0D1C26D7DC78F49D"
+          },
+          "rawSql": "WITH latest AS (\n  SELECT thermal_health, memory_health, performance_health, power_health, reliability_health\n  FROM gpu_health_scores\n  WHERE gpu_uuid = '$gpu_uuid'\n  ORDER BY time DESC\n  LIMIT 1\n)\nSELECT 'Thermal' AS \"Component\", thermal_health AS \"Current Score\", 85.0 AS \"Baseline (Good)\"\nFROM latest\nUNION ALL\nSELECT 'Memory', memory_health, 85.0\nFROM latest\nUNION ALL\nSELECT 'Performance', performance_health, 85.0\nFROM latest\nUNION ALL\nSELECT 'Power', power_health, 85.0\nFROM latest\nUNION ALL\nSELECT 'Reliability', reliability_health, 85.0\nFROM latest",
+          "format": "table",
+          "refId": "A"
+        }
+      ],
+      "options": {
+        "orientation": "horizontal",
+        "showValue": "always",
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "max": 100,
+          "min": 0
+        }
+      }
+    },
+    {
+      "id": 9,
+      "title": "Anomaly Timeline (Last 6 Hours)",
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 17
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "P0D1C26D7DC78F49D"
+          },
+          "rawSql": "SELECT\n  detected_at AS \"time\",\n  CASE severity\n    WHEN 'low' THEN 1\n    WHEN 'medium' THEN 2\n    WHEN 'high' THEN 3\n    WHEN 'critical' THEN 4\n  END AS \"Severity Level\"\nFROM anomalies\nWHERE gpu_uuid = '$gpu_uuid' AND detected_at > NOW() - INTERVAL '6 hours'\nORDER BY detected_at",
+          "format": "time_series",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "points",
+            "pointSize": 8,
+            "showPoints": "always"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 2
+              },
+              {
+                "color": "orange",
+                "value": 3
+              },
+              {
+                "color": "red",
+                "value": 4
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "legend": {
+          "showLegend": false
+        }
+      }
+    }
+  ]
 }
