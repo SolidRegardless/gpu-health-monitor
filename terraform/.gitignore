@@ -1,0 +1,17 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+*.tfvars
+
+# Archives
+*.tar.gz
+*.zip
+
+# SSH keys
+*.pem
+*.key
+
+# Logs
+*.log

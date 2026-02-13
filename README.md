@@ -105,13 +105,52 @@ This repository contains comprehensive documentation for implementing a GPU heal
 
 ## Quick Start
 
-### Prerequisites
+### Option 1: Deploy to Azure (One Command) ⚡
+
+**Perfect for demos and production deployments**
+
+```bash
+cd terraform
+./deploy.sh
+```
+
+In ~5 minutes, you'll have:
+- Complete GPU monitoring stack running in Azure East US
+- Public Grafana dashboard accessible worldwide
+- 5 GPU simulation with realistic health profiles
+- Professional infrastructure-as-code deployment
+
+**Requirements:** Azure CLI + Terraform ([Installation Guide](terraform/README.md))
+
+**Cost:** ~$0.192/hour (~$140/month for Standard_D4s_v3)
+
+After deployment:
+```bash
+# Check status
+./check-status.sh
+
+# Get Grafana URL
+terraform output grafana_url
+
+# Clean up when done
+./destroy.sh
+```
+
+See [terraform/README.md](terraform/README.md) for full details.
+
+---
+
+### Option 2: Local Development
+
+**For local testing and development**
+
+#### Prerequisites
 
 - Docker & Docker Compose
 - 8GB+ RAM
 - Ports: 2181, 9092, 5432, 3000, 8000, 9400
 
-### Start the System
+#### Start the System
 
 ```bash
 cd docker
@@ -125,7 +164,7 @@ docker compose exec timescaledb psql -U gpu_monitor -d gpu_health \
   -c "SELECT COUNT(*) FROM gpu_metrics;"
 ```
 
-### Access Dashboards
+#### Access Dashboards
 
 - **Grafana**: http://localhost:3000 (admin/admin)
   - Simple Dashboard: http://localhost:3000/d/gpu-health-simple

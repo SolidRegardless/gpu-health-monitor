@@ -1,0 +1,55 @@
+#cloud-config
+
+# GPU Health Monitor - Automated Deployment
+# This script runs on first boot to set up Docker and deploy the monitoring stack
+
+package_update: true
+package_upgrade: true
+
+packages:
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - gnupg
+  - lsb-release
+  - git
+
+write_files:
+  - path: /tmp/gpu-health-monitor.tar.gz
+    encoding: b64
+    content: ${repo_archive}
+    permissions: '0644'
+
+runcmd:
+  # Install Docker
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+  - echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+  - apt-get update
+  - apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+  
+  # Install Docker Compose (standalone)
+  - curl -L "https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+  - chmod +x /usr/local/bin/docker-compose
+  
+  # Enable Docker service
+  - systemctl enable docker
+  - systemctl start docker
+  
+  # Extract the application
+  - mkdir -p /opt/gpu-health-monitor
+  - cd /opt/gpu-health-monitor
+  - tar -xzf /tmp/gpu-health-monitor.tar.gz
+  - rm /tmp/gpu-health-monitor.tar.gz
+  
+  # Deploy the stack
+  - cd /opt/gpu-health-monitor
+  - docker-compose -f docker/docker-compose.yml up -d
+  
+  # Wait for services to be healthy
+  - sleep 30
+  
+  # Log deployment status
+  - docker-compose -f docker/docker-compose.yml ps > /var/log/gpu-monitor-deploy.log
+  - echo "Deployment completed at $(date)" >> /var/log/gpu-monitor-deploy.log
+
+final_message: "GPU Health Monitor deployment complete! Grafana available at http://$(curl -s ifconfig.me):3000"
