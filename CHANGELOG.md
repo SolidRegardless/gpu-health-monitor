@@ -141,9 +141,27 @@ For existing deployments that encounter these issues:
    docker-compose -f docker/docker-compose.yml up -d
    ```
 
-### Known Issues
+### Known Issues & Expected Behavior
 
-None - all major issues resolved.
+**Predictive Analytics Dashboard Shows "No Data" (EXPECTED)**:
+- **Status**: Expected for new deployments
+- **Cause**: ML features require 7+ days of historical metrics data
+- **Current Data**: ~21 minutes (130 records per GPU)
+- **Timeline**: Predictions will automatically activate after 7 days (2026-02-20)
+- **Services**: All ML services running correctly, waiting for data accumulation
+- **Details**: See `PREDICTIVE_ANALYTICS_README.md`
+
+**Components Affected**:
+- Failure Probability Forecast (needs 7 days)
+- ML Model Confidence (needs 7 days)  
+- Predicted Failure Type (needs 7 days)
+- Estimated Time to Failure (needs 7 days)
+- Anomaly Timeline (limited until 24+ hours)
+
+**Components Working**:
+- GPU Health Scores ✅ (real-time, 10 records)
+- Live monitoring dashboards ✅ (GPU Fleet, Datacenter, Detail)
+- All metrics collection ✅ (130+ records per GPU)
 
 ### Deployment Verification Checklist
 
