@@ -474,7 +474,11 @@
         "defaults": {
           "custom": {
             "align": "center",
-            "displayMode": "color-background"
+            "displayMode": "color-background",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
           },
           "thresholds": {
             "mode": "absolute",
@@ -485,7 +489,32 @@
               }
             ]
           }
-        }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Failure Type"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 200
+              },
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": false,
+        "footer": {
+          "show": false
+        },
+        "cellHeight": "lg"
       }
     },
     {
