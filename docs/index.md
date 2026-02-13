@@ -64,9 +64,29 @@ The system includes 6 pre-configured dashboards:
 3. **Datacenter Overview** - Rack-level aggregation and filtering
 4. **GPU Health Monitor Overview** - Health scoring visualization
 5. **GPU Health Monitor - Simple** - Simplified quick view
-6. **GPU Predictive Analytics** - ML-based failure forecasting
+6. **GPU Predictive Analytics** - ML-based failure forecasting ⚠️ See fixes below
 
 Access: http://localhost:3000 (admin/admin)
+
+## 🔧 Troubleshooting & Fixes
+
+### Production Fixes (2026-02-13)
+
+- **[Predictive Dashboard Fix](../PREDICTIVE_DASHBOARD_FIX.md)** (8 KB)
+  - Complete fix for "No Data" issues in predictive analytics dashboard
+  - Feature engineering column name corrections
+  - Dashboard variable configuration
+  - Styled failure type panel with emojis
+  
+- **[Gauge Visualization Fix](../GAUGE_FIX_SUMMARY.md)** (9 KB)
+  - Fixed 13 gauge panels across 4 dashboards
+  - All gauges now show filled progress bars
+  - Min/max configuration guide
+
+- **[Schema Initialization Fix](../DEPLOYMENT_FIX.md)** (4 KB)
+  - Resolved database initialization conflicts
+  - Correct schema file ordering
+  - Column name corrections
 
 ## 🔧 Quick Reference
 

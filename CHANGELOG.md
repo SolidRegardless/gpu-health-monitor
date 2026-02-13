@@ -6,6 +6,40 @@ All notable changes to the GPU Health Monitor project.
 
 ### Fixed
 
+#### Predictive Dashboard - Feature Engineering & Visualization
+- **Fixed**: GPU Predictive Analytics dashboard showing "No Data" in all panels
+- **Root Causes**:
+  1. Feature engineering service using incorrect column names (schema mismatch)
+  2. Dashboard GPU variable had no default selection
+  3. Predicted Failure Type panel incorrectly configured for stat display
+- **Column Name Fixes**:
+  - `memory_copy_utilization` → `mem_copy_utilization`
+  - `sm_clock` → `sm_clock_mhz`
+  - `memory_clock` → `mem_clock_mhz`
+  - `pcie_tx_throughput` → `pcie_tx_bytes_per_sec`
+  - `pcie_rx_throughput` → `pcie_rx_bytes_per_sec`
+  - Removed references to unavailable columns: nvlink, fan_speed, total_energy
+- **Added**: Schema-aware feature filtering (only saves features that exist in table)
+- **Added**: Default GPU selection to dashboard variable (auto-selects first GPU)
+- **Added**: Styled failure type panel with emojis and color coding:
+  - 🔥 Thermal Failure (orange)
+  - ⚡ Power Failure (yellow)
+  - 💾 Memory Failure (red)
+  - ⚠️ ECC Errors (purple)
+  - ⏰ Component Aging (blue)
+- **Impact**: 
+  - Feature engineering now extracts 27 features per GPU every 5 minutes
+  - Failure predictions generated successfully (7/30/90-day risk probabilities)
+  - All dashboard panels display data immediately
+  - GPU-mno345pqr678 (aging): 11.8% 30-day thermal failure risk
+  - GPU-def456abc789 (high_temp): 6.5% 30-day thermal failure risk
+- **Files Modified**:
+  - `src/feature-engineering/feature_engineer.py`
+  - `config/grafana/dashboards/gpu-predictive.json`
+- **Details**: See `PREDICTIVE_DASHBOARD_FIX.md`
+
+### Fixed
+
 #### Database Schema Initialization
 - **Removed**: Conflicting `schema/01_init_schema_multi_gpu.sql` file
 - **Added**: Proper `schema/07_init_multi_gpu_data.sql` for initial GPU data
