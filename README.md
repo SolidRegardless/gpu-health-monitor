@@ -101,7 +101,7 @@ This repository contains comprehensive documentation for implementing a GPU heal
 - **[Current Status](current-status.md)**: Current implementation status and component completion
 - **[Database Tables](docs/database-tables-explained.md)**: Complete database schema reference
 - **[ML Tech Stack](docs/ml-tech-stack.md)**: Machine learning models and dependencies
-- **[Grafana Dashboards](docs/PREDICTIVE_DASHBOARD.md)**: Dashboard setup and configuration
+- **[Documentation Index](docs/index.md)**: Complete guide to all documentation
 
 ## Quick Start
 
@@ -282,13 +282,14 @@ Full API documentation: http://localhost:8000/docs
 
 **Version:** 1.0 (POC Complete)  
 **Services:** 17 running  
-**Test Environment:** Single GPU (mock)  
-**Database:** 10 clean tables (all with `gpu_` prefix)  
-**Metrics:** Collecting every 10 seconds  
-**Health Scores:** Updating every 15 minutes  
-**Predictions:** Updating every 5 minutes  
+**Test Environment:** 5 GPU simulation with realistic health profiles  
+**Database:** 16 tables with proper schema, compression, and retention  
+**Metrics:** Collecting every 10 seconds (29,597+ metrics stored)  
+**Health Scores:** Multi-dimensional scoring across 5 dimensions  
+**Predictions:** ML-based failure forecasting  
+**Dashboards:** 6 Grafana dashboards with GPU/datacenter selection  
 
-See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for detailed component status.
+See [current-status.md](current-status.md) for detailed component status and metrics.
 
 ## ROI & Business Value
 
