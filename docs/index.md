@@ -25,6 +25,12 @@ Start here if you're new to the project:
   - Budget and resource planning
 
 ### Technical Reference
+- **[Technology Deep Dive](TECHNOLOGY_DEEP_DIVE.md)** (50 KB) ⭐ **NEW**
+  - Beginner's guide to every technology in the stack
+  - Docker, Kafka, TimescaleDB, Grafana, XGBoost, etc.
+  - Specific examples for A100/H100 GPU monitoring
+  - Production scaling guidance (10,000 GPU fleets)
+
 - **[Database Tables Explained](database-tables-explained.md)** (8 KB)
   - Complete schema documentation
   - Table relationships
@@ -122,6 +128,7 @@ docker logs gpu-monitor-<service-name> --tail 50 --follow
 
 | Document | Size | Last Updated | Status |
 |----------|------|--------------|--------|
+| Technology Deep Dive | 50 KB | 2026-02-13 | ⭐ **NEW** |
 | System Architecture | 59 KB | 2026-02-11 | ✅ Current |
 | POC Implementation | 43 KB | 2026-02-11 | ✅ Current |
 | Fresh Deployment | 7 KB | 2026-02-13 | ✅ Current |
@@ -150,7 +157,7 @@ When adding documentation:
 
 ---
 
-**Total Documentation:** 10 core files + 8 in docs/ (~120 KB)  
+**Total Documentation:** 10 core files + 9 in docs/ (~170 KB)  
 **Format:** Markdown with Mermaid diagrams  
 **Version Control:** All docs in Git  
 **Note:** Transient fix documentation consolidated into CHANGELOG.md
