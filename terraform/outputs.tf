@@ -21,23 +21,49 @@ output "grafana_credentials" {
   }
 }
 
+output "api_url" {
+  description = "URL to access API"
+  value       = "http://${azurerm_public_ip.gpu_monitor.ip_address}:8000"
+}
+
+output "mlflow_url" {
+  description = "URL to access MLflow"
+  value       = "http://${azurerm_public_ip.gpu_monitor.ip_address}:5000"
+}
+
+output "adminer_url" {
+  description = "URL to access Adminer (DB GUI)"
+  value       = "http://${azurerm_public_ip.gpu_monitor.ip_address}:8080"
+}
+
 output "deployment_info" {
   description = "Important deployment information"
-  value = <<-EOT
+  value       = <<-EOT
   
-  ╔════════════════════════════════════════════════════════════════╗
-  ║          GPU Health Monitor - Deployment Complete             ║
-  ╠════════════════════════════════════════════════════════════════╣
-  ║                                                                ║
-  ║  Grafana Dashboard: http://${azurerm_public_ip.gpu_monitor.ip_address}:3000               ║
-  ║  Username: admin                                               ║
-  ║  Password: admin                                               ║
-  ║                                                                ║
-  ║  SSH Access: ssh ${var.admin_username}@${azurerm_public_ip.gpu_monitor.ip_address}        ║
-  ║                                                                ║
-  ║  Note: Allow ~5 minutes for all services to fully start        ║
-  ║                                                                ║
-  ╚════════════════════════════════════════════════════════════════╝
+  ╔══════════════════════════════════════════════════════════════════╗
+  ║          GPU Health Monitor - Deployment Complete               ║
+  ╠══════════════════════════════════════════════════════════════════╣
+  ║                                                                  ║
+  ║  🎯 Services:                                                    ║
+  ║     Grafana:  http://${azurerm_public_ip.gpu_monitor.ip_address}:3000 (admin/admin)                   ║
+  ║     API:      http://${azurerm_public_ip.gpu_monitor.ip_address}:8000                                ║
+  ║     MLflow:   http://${azurerm_public_ip.gpu_monitor.ip_address}:5000                                ║
+  ║     Adminer:  http://${azurerm_public_ip.gpu_monitor.ip_address}:8080 (DB GUI)                       ║
+  ║                                                                  ║
+  ║  🔐 SSH: ssh ${var.admin_username}@${azurerm_public_ip.gpu_monitor.ip_address}                         ║
+  ║                                                                  ║
+  ║  💾 Database: TimescaleDB                                        ║
+  ║     Host: ${azurerm_public_ip.gpu_monitor.ip_address}:5432                                 ║
+  ║     DB: gpu_health / User: gpu_monitor                           ║
+  ║                                                                  ║
+  ║  ⚙️  Components Running:                                         ║
+  ║     • Mock DCGM (GPU simulator)                                  ║
+  ║     • Kafka + Zookeeper (streaming)                              ║
+  ║     • Metric processors (validate/enrich/sink)                   ║
+  ║     • ML models (anomaly detection, failure prediction)          ║
+  ║     • Health scoring & alerting                                  ║
+  ║                                                                  ║
+  ╚══════════════════════════════════════════════════════════════════╝
   
   EOT
 }

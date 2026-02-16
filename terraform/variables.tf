@@ -19,7 +19,7 @@ variable "prefix" {
 variable "vm_size" {
   description = "Azure VM size"
   type        = string
-  default     = "Standard_B4ms"  # 4 vCPU, 16 GB RAM, burstable
+  default     = "Standard_B4ms" # 4 vCPU, 16 GB RAM, burstable
 }
 
 variable "admin_username" {
@@ -32,4 +32,10 @@ variable "ssh_public_key_path" {
   description = "Path to SSH public key file"
   type        = string
   default     = "~/.ssh/id_rsa.pub"
+}
+
+variable "ssh_private_key_path" {
+  description = "Path to SSH private key file (for provisioners)"
+  type        = string
+  default     = "~/.ssh/id_rsa"
 }

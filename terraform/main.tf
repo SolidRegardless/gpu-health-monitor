@@ -16,7 +16,7 @@ provider "azurerm" {
 resource "azurerm_resource_group" "gpu_monitor" {
   name     = var.resource_group_name
   location = var.location
-  
+
   tags = {
     Environment = "Demo"
     Project     = "GPU-Health-Monitor"
@@ -30,7 +30,7 @@ resource "azurerm_virtual_network" "gpu_monitor" {
   address_space       = ["10.0.0.0/16"]
   location            = azurerm_resource_group.gpu_monitor.location
   resource_group_name = azurerm_resource_group.gpu_monitor.name
-  
+
   tags = azurerm_resource_group.gpu_monitor.tags
 }
 
@@ -49,7 +49,7 @@ resource "azurerm_public_ip" "gpu_monitor" {
   resource_group_name = azurerm_resource_group.gpu_monitor.name
   allocation_method   = "Static"
   sku                 = "Standard"
-  
+
   tags = azurerm_resource_group.gpu_monitor.tags
 }
 
@@ -58,7 +58,7 @@ resource "azurerm_network_security_group" "gpu_monitor" {
   name                = "${var.prefix}-nsg"
   location            = azurerm_resource_group.gpu_monitor.location
   resource_group_name = azurerm_resource_group.gpu_monitor.name
-  
+
   # SSH access
   security_rule {
     name                       = "SSH"
@@ -71,7 +71,7 @@ resource "azurerm_network_security_group" "gpu_monitor" {
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
-  
+
   # Grafana access
   security_rule {
     name                       = "Grafana"
@@ -84,7 +84,7 @@ resource "azurerm_network_security_group" "gpu_monitor" {
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
-  
+
   tags = azurerm_resource_group.gpu_monitor.tags
 }
 
@@ -93,14 +93,14 @@ resource "azurerm_network_interface" "gpu_monitor" {
   name                = "${var.prefix}-nic"
   location            = azurerm_resource_group.gpu_monitor.location
   resource_group_name = azurerm_resource_group.gpu_monitor.name
-  
+
   ip_configuration {
     name                          = "internal"
     subnet_id                     = azurerm_subnet.gpu_monitor.id
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id          = azurerm_public_ip.gpu_monitor.id
   }
-  
+
   tags = azurerm_resource_group.gpu_monitor.tags
 }
 
@@ -117,30 +117,86 @@ resource "azurerm_linux_virtual_machine" "gpu_monitor" {
   location            = azurerm_resource_group.gpu_monitor.location
   size                = var.vm_size
   admin_username      = var.admin_username
-  
+
   network_interface_ids = [
     azurerm_network_interface.gpu_monitor.id,
   ]
-  
+
   admin_ssh_key {
     username   = var.admin_username
-    public_key = file(var.ssh_public_key_path)
+    public_key = file(pathexpand(var.ssh_public_key_path))
   }
-  
+
   os_disk {
     caching              = "ReadWrite"
     storage_account_type = "Premium_LRS"
     disk_size_gb         = 64
   }
-  
+
   source_image_reference {
     publisher = "Canonical"
-    offer     = "0001-com-ubuntu-server-noble"
-    sku       = "24_04-lts-gen2"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-lts-gen2"
     version   = "latest"
   }
-  
+
   custom_data = base64encode(file("${path.module}/cloud-init-simple.yaml"))
-  
+
   tags = azurerm_resource_group.gpu_monitor.tags
+
+  # Connection config for provisioners
+  connection {
+    type        = "ssh"
+    user        = var.admin_username
+    private_key = file(pathexpand(var.ssh_private_key_path))
+    host        = azurerm_public_ip.gpu_monitor.ip_address
+    timeout     = "10m"
+  }
+
+  # Wait for cloud-init to complete
+  provisioner "remote-exec" {
+    inline = [
+      "echo 'Waiting for cloud-init...'",
+      "cloud-init status --wait || echo 'cloud-init check skipped'",
+      "echo 'Verifying Docker installation...'",
+      "docker --version",
+      "docker-compose --version",
+      "echo 'VM ready for application deployment'"
+    ]
+  }
+
+  # Copy application archive
+  provisioner "file" {
+    source      = "${path.module}/../gpu-app-deploy.tar.gz"
+    destination = "/tmp/gpu-app-deploy.tar.gz"
+  }
+
+  # Deploy and start application
+  provisioner "remote-exec" {
+    inline = [
+      "echo '=================================================='",
+      "echo 'GPU Health Monitor - Application Deployment'",
+      "echo '=================================================='",
+      "sudo mkdir -p /opt/gpu-health-monitor",
+      "sudo tar xzf /tmp/gpu-app-deploy.tar.gz -C /opt/gpu-health-monitor",
+      "sudo chown -R ${var.admin_username}:${var.admin_username} /opt/gpu-health-monitor",
+      "sudo usermod -aG docker ${var.admin_username}",
+      "cd /opt/gpu-health-monitor/docker",
+      "echo 'Building Docker images (this may take 5-10 minutes)...'",
+      "sudo docker-compose build --parallel",
+      "echo 'Starting services...'",
+      "sudo docker-compose up -d",
+      "echo 'Waiting for containers to initialize...'",
+      "sleep 30",
+      "echo 'Container status:'",
+      "sudo docker-compose ps",
+      "echo '=================================================='",
+      "echo 'Deployment Complete!'",
+      "echo 'Grafana: http://${azurerm_public_ip.gpu_monitor.ip_address}:3000'",
+      "echo 'API: http://${azurerm_public_ip.gpu_monitor.ip_address}:8000'",
+      "echo 'MLflow: http://${azurerm_public_ip.gpu_monitor.ip_address}:5000'",
+      "echo 'Adminer: http://${azurerm_public_ip.gpu_monitor.ip_address}:8080'",
+      "echo '=================================================='",
+    ]
+  }
 }
