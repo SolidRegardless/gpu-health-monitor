@@ -72,3 +72,10 @@ interview-*.md
 *deployment*.md
 terraform-deployment*.md
 *demo-guide*.md
+
+# Terraform
+terraform/plugin-dir/
+terraform/*.tar.gz
+
+# Build artifacts
+*.tar.gz
