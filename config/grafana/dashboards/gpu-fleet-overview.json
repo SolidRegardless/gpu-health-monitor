@@ -21,14 +21,14 @@
         "uid": "P0D1C26D7DC78F49D"
       },
       "gridPos": {
-        "h": 4,
+        "h": 5,
         "w": 24,
         "x": 0,
         "y": 0
       },
       "id": 100,
       "options": {
-        "content": "# GPU Fleet Overview\n\n**Total GPUs:** 5 | **Monitoring:** Real-time health and performance across all GPU resources\n\nClick on individual GPU panels below to drill down, or use the [GPU Detail Dashboard](/d/gpu-detail) for in-depth analysis.",
+        "content": "# GPU Fleet Overview\n\n**Filter Options:** Use the dropdowns above to filter by datacenter and select specific GPUs\n\nClick on individual GPU panels below to drill down, or use the [GPU Detail Dashboard](/d/gpu-detail) for in-depth analysis.",
         "mode": "markdown"
       },
       "pluginVersion": "10.0.0",
@@ -72,7 +72,7 @@
         "h": 5,
         "w": 4,
         "x": 0,
-        "y": 4
+        "y": 5
       },
       "id": 1,
       "options": {
@@ -96,7 +96,7 @@
             "uid": "P0D1C26D7DC78F49D"
           },
           "format": "table",
-          "rawSql": "SELECT AVG(gpu_temp) FROM (\n  SELECT DISTINCT ON (gpu_uuid) gpu_uuid, gpu_temp\n  FROM gpu_metrics\n  ORDER BY gpu_uuid, time DESC\n) AS latest",
+          "rawSql": "SELECT AVG(gpu_temp) FROM (\n  SELECT DISTINCT ON (m.gpu_uuid) m.gpu_uuid, m.gpu_temp\n  FROM gpu_metrics m\n  LEFT JOIN gpu_assets a ON m.gpu_uuid = a.gpu_uuid\n  WHERE ('$datacenter' = 'All' OR a.datacenter = '$datacenter')\n    AND ('$gpu' = 'All' OR m.gpu_uuid = '$gpu')\n  ORDER BY m.gpu_uuid, m.time DESC\n) AS latest",
           "refId": "A"
         }
       ],
@@ -140,7 +140,7 @@
         "h": 5,
         "w": 4,
         "x": 4,
-        "y": 4
+        "y": 5
       },
       "id": 2,
       "options": {
@@ -164,7 +164,7 @@
             "uid": "P0D1C26D7DC78F49D"
           },
           "format": "table",
-          "rawSql": "SELECT MAX(gpu_temp) FROM (\n  SELECT DISTINCT ON (gpu_uuid) gpu_uuid, gpu_temp\n  FROM gpu_metrics\n  ORDER BY gpu_uuid, time DESC\n) AS latest",
+          "rawSql": "SELECT MAX(gpu_temp) FROM (\n  SELECT DISTINCT ON (m.gpu_uuid) m.gpu_uuid, m.gpu_temp\n  FROM gpu_metrics m\n  LEFT JOIN gpu_assets a ON m.gpu_uuid = a.gpu_uuid\n  WHERE ('$datacenter' = 'All' OR a.datacenter = '$datacenter')\n    AND ('$gpu' = 'All' OR m.gpu_uuid = '$gpu')\n  ORDER BY m.gpu_uuid, m.time DESC\n) AS latest",
           "refId": "A"
         }
       ],
@@ -208,7 +208,7 @@
         "h": 5,
         "w": 4,
         "x": 8,
-        "y": 4
+        "y": 5
       },
       "id": 3,
       "options": {
@@ -232,7 +232,7 @@
             "uid": "P0D1C26D7DC78F49D"
           },
           "format": "table",
-          "rawSql": "SELECT SUM(power_usage) FROM (\n  SELECT DISTINCT ON (gpu_uuid) gpu_uuid, power_usage\n  FROM gpu_metrics\n  ORDER BY gpu_uuid, time DESC\n) AS latest",
+          "rawSql": "SELECT SUM(power_usage) FROM (\n  SELECT DISTINCT ON (m.gpu_uuid) m.gpu_uuid, m.power_usage\n  FROM gpu_metrics m\n  LEFT JOIN gpu_assets a ON m.gpu_uuid = a.gpu_uuid\n  WHERE ('$datacenter' = 'All' OR a.datacenter = '$datacenter')\n    AND ('$gpu' = 'All' OR m.gpu_uuid = '$gpu')\n  ORDER BY m.gpu_uuid, m.time DESC\n) AS latest",
           "refId": "A"
         }
       ],
@@ -300,7 +300,7 @@
             "uid": "P0D1C26D7DC78F49D"
           },
           "format": "table",
-          "rawSql": "SELECT AVG(sm_active) FROM (\n  SELECT DISTINCT ON (gpu_uuid) gpu_uuid, sm_active\n  FROM gpu_metrics\n  ORDER BY gpu_uuid, time DESC\n) AS latest",
+          "rawSql": "SELECT AVG(sm_active) FROM (\n  SELECT DISTINCT ON (m.gpu_uuid) m.gpu_uuid, m.sm_active\n  FROM gpu_metrics m\n  LEFT JOIN gpu_assets a ON m.gpu_uuid = a.gpu_uuid\n  WHERE ('$datacenter' = 'All' OR a.datacenter = '$datacenter')\n    AND ('$gpu' = 'All' OR m.gpu_uuid = '$gpu')\n  ORDER BY m.gpu_uuid, m.time DESC\n) AS latest",
           "refId": "A"
         }
       ],
@@ -368,7 +368,7 @@
             "uid": "P0D1C26D7DC78F49D"
           },
           "format": "table",
-          "rawSql": "SELECT SUM(ecc_sbe_aggregate) FROM (\n  SELECT DISTINCT ON (gpu_uuid) gpu_uuid, ecc_sbe_aggregate\n  FROM gpu_metrics\n  ORDER BY gpu_uuid, time DESC\n) AS latest",
+          "rawSql": "SELECT SUM(ecc_sbe_aggregate) FROM (\n  SELECT DISTINCT ON (m.gpu_uuid) m.gpu_uuid, m.ecc_sbe_aggregate\n  FROM gpu_metrics m\n  LEFT JOIN gpu_assets a ON m.gpu_uuid = a.gpu_uuid\n  WHERE ('$datacenter' = 'All' OR a.datacenter = '$datacenter')\n    AND ('$gpu' = 'All' OR m.gpu_uuid = '$gpu')\n  ORDER BY m.gpu_uuid, m.time DESC\n) AS latest",
           "refId": "A"
         }
       ],
@@ -436,7 +436,7 @@
             "uid": "P0D1C26D7DC78F49D"
           },
           "format": "table",
-          "rawSql": "SELECT SUM(ecc_dbe_aggregate) FROM (\n  SELECT DISTINCT ON (gpu_uuid) gpu_uuid, ecc_dbe_aggregate\n  FROM gpu_metrics\n  ORDER BY gpu_uuid, time DESC\n) AS latest",
+          "rawSql": "SELECT SUM(ecc_dbe_aggregate) FROM (\n  SELECT DISTINCT ON (m.gpu_uuid) m.gpu_uuid, m.ecc_dbe_aggregate\n  FROM gpu_metrics m\n  LEFT JOIN gpu_assets a ON m.gpu_uuid = a.gpu_uuid\n  WHERE ('$datacenter' = 'All' OR a.datacenter = '$datacenter')\n    AND ('$gpu' = 'All' OR m.gpu_uuid = '$gpu')\n  ORDER BY m.gpu_uuid, m.time DESC\n) AS latest",
           "refId": "A"
         }
       ],
@@ -517,11 +517,11 @@
             "uid": "P0D1C26D7DC78F49D"
           },
           "format": "time_series",
-          "rawSql": "SELECT \n  time,\n  MAX(CASE WHEN gpu_uuid = 'GPU-abc123def456' THEN gpu_temp END) AS \"GPU-abc123def456 (healthy)\",\n  MAX(CASE WHEN gpu_uuid = 'GPU-def456abc789' THEN gpu_temp END) AS \"GPU-def456abc789 (high_temp)\",\n  MAX(CASE WHEN gpu_uuid = 'GPU-ghi789jkl012' THEN gpu_temp END) AS \"GPU-ghi789jkl012 (power_hungry)\",\n  MAX(CASE WHEN gpu_uuid = 'GPU-mno345pqr678' THEN gpu_temp END) AS \"GPU-mno345pqr678 (aging)\",\n  MAX(CASE WHEN gpu_uuid = 'GPU-stu901vwx234' THEN gpu_temp END) AS \"GPU-stu901vwx234 (excellent)\"\nFROM gpu_metrics\nWHERE $__timeFilter(time)\nGROUP BY time\nORDER BY time",
+          "rawSql": "SELECT \n  m.time,\n  m.gpu_uuid as metric,\n  m.gpu_temp as value\nFROM gpu_metrics m\nLEFT JOIN gpu_assets a ON m.gpu_uuid = a.gpu_uuid\nWHERE $__timeFilter(m.time)\n  AND ('$datacenter' = 'All' OR a.datacenter = '$datacenter')\n  AND ('$gpu' = 'All' OR m.gpu_uuid = '$gpu')\nORDER BY m.time",
           "refId": "A"
         }
       ],
-      "title": "GPU Temperature - All GPUs",
+      "title": "GPU Temperature - Filtered GPUs",
       "type": "timeseries"
     },
     {
@@ -598,11 +598,11 @@
             "uid": "P0D1C26D7DC78F49D"
           },
           "format": "time_series",
-          "rawSql": "SELECT \n  time,\n  MAX(CASE WHEN gpu_uuid = 'GPU-abc123def456' THEN power_usage END) AS \"GPU-abc123def456 (healthy)\",\n  MAX(CASE WHEN gpu_uuid = 'GPU-def456abc789' THEN power_usage END) AS \"GPU-def456abc789 (high_temp)\",\n  MAX(CASE WHEN gpu_uuid = 'GPU-ghi789jkl012' THEN power_usage END) AS \"GPU-ghi789jkl012 (power_hungry)\",\n  MAX(CASE WHEN gpu_uuid = 'GPU-mno345pqr678' THEN power_usage END) AS \"GPU-mno345pqr678 (aging)\",\n  MAX(CASE WHEN gpu_uuid = 'GPU-stu901vwx234' THEN power_usage END) AS \"GPU-stu901vwx234 (excellent)\"\nFROM gpu_metrics\nWHERE $__timeFilter(time)\nGROUP BY time\nORDER BY time",
+          "rawSql": "SELECT \n  m.time,\n  m.gpu_uuid as metric,\n  m.power_usage as value\nFROM gpu_metrics m\nLEFT JOIN gpu_assets a ON m.gpu_uuid = a.gpu_uuid\nWHERE $__timeFilter(m.time)\n  AND ('$datacenter' = 'All' OR a.datacenter = '$datacenter')\n  AND ('$gpu' = 'All' OR m.gpu_uuid = '$gpu')\nORDER BY m.time",
           "refId": "A"
         }
       ],
-      "title": "Power Usage - All GPUs",
+      "title": "Power Usage - Filtered GPUs",
       "type": "timeseries"
     },
     {
@@ -680,11 +680,11 @@
             "uid": "P0D1C26D7DC78F49D"
           },
           "format": "time_series",
-          "rawSql": "SELECT \n  time,\n  MAX(CASE WHEN gpu_uuid = 'GPU-abc123def456' THEN sm_active END) AS \"GPU-abc123def456 (healthy)\",\n  MAX(CASE WHEN gpu_uuid = 'GPU-def456abc789' THEN sm_active END) AS \"GPU-def456abc789 (high_temp)\",\n  MAX(CASE WHEN gpu_uuid = 'GPU-ghi789jkl012' THEN sm_active END) AS \"GPU-ghi789jkl012 (power_hungry)\",\n  MAX(CASE WHEN gpu_uuid = 'GPU-mno345pqr678' THEN sm_active END) AS \"GPU-mno345pqr678 (aging)\",\n  MAX(CASE WHEN gpu_uuid = 'GPU-stu901vwx234' THEN sm_active END) AS \"GPU-stu901vwx234 (excellent)\"\nFROM gpu_metrics\nWHERE $__timeFilter(time)\nGROUP BY time\nORDER BY time",
+          "rawSql": "SELECT \n  m.time,\n  m.gpu_uuid as metric,\n  m.sm_active as value\nFROM gpu_metrics m\nLEFT JOIN gpu_assets a ON m.gpu_uuid = a.gpu_uuid\nWHERE $__timeFilter(m.time)\n  AND ('$datacenter' = 'All' OR a.datacenter = '$datacenter')\n  AND ('$gpu' = 'All' OR m.gpu_uuid = '$gpu')\nORDER BY m.time",
           "refId": "A"
         }
       ],
-      "title": "GPU Utilization - All GPUs",
+      "title": "GPU Utilization - Filtered GPUs",
       "type": "timeseries"
     },
     {
@@ -842,7 +842,7 @@
             "uid": "P0D1C26D7DC78F49D"
           },
           "format": "table",
-          "rawSql": "SELECT \n  gpu_uuid,\n  ROUND(gpu_temp::numeric, 1) as gpu_temp,\n  ROUND(memory_temp::numeric, 1) as memory_temp,\n  ROUND(power_usage::numeric, 1) as power_usage,\n  ROUND(sm_active::numeric, 1) as utilization,\n  ecc_sbe_aggregate as sbe_errors,\n  ecc_dbe_aggregate as dbe_errors\nFROM (\n  SELECT DISTINCT ON (gpu_uuid) *\n  FROM gpu_metrics\n  ORDER BY gpu_uuid, time DESC\n) AS latest\nORDER BY gpu_temp DESC",
+          "rawSql": "SELECT \n  m.gpu_uuid,\n  a.datacenter,\n  ROUND(m.gpu_temp::numeric, 1) as gpu_temp,\n  ROUND(m.memory_temp::numeric, 1) as memory_temp,\n  ROUND(m.power_usage::numeric, 1) as power_usage,\n  ROUND(m.sm_active::numeric, 1) as utilization,\n  m.ecc_sbe_aggregate as sbe_errors,\n  m.ecc_dbe_aggregate as dbe_errors\nFROM (\n  SELECT DISTINCT ON (gpu_uuid) *\n  FROM gpu_metrics\n  ORDER BY gpu_uuid, time DESC\n) AS m\nLEFT JOIN gpu_assets a ON m.gpu_uuid = a.gpu_uuid\nWHERE ('$datacenter' = 'All' OR a.datacenter = '$datacenter')\n  AND ('$gpu' = 'All' OR m.gpu_uuid = '$gpu')\nORDER BY m.gpu_temp DESC",
           "refId": "A"
         }
       ],
@@ -859,7 +859,58 @@
     "overview"
   ],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "allValue": "All",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "All"
+        },
+        "datasource": {
+          "type": "postgres",
+          "uid": "P0D1C26D7DC78F49D"
+        },
+        "definition": "SELECT 'All' UNION SELECT DISTINCT datacenter FROM gpu_assets ORDER BY 1",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Datacenter",
+        "multi": false,
+        "name": "datacenter",
+        "options": [],
+        "query": "SELECT 'All' UNION SELECT DISTINCT datacenter FROM gpu_assets ORDER BY 1",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "allValue": "All",
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "All"
+        },
+        "datasource": {
+          "type": "postgres",
+          "uid": "P0D1C26D7DC78F49D"
+        },
+        "definition": "SELECT 'All' UNION SELECT DISTINCT gpu_uuid FROM gpu_assets WHERE '$datacenter' = 'All' OR datacenter = '$datacenter' ORDER BY 1",
+        "hide": 0,
+        "includeAll": false,
+        "label": "GPU",
+        "multi": false,
+        "name": "gpu",
+        "options": [],
+        "query": "SELECT 'All' UNION SELECT DISTINCT gpu_uuid FROM gpu_assets WHERE '$datacenter' = 'All' OR datacenter = '$datacenter' ORDER BY 1",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
   },
   "time": {
     "from": "now-1h",
@@ -869,5 +920,5 @@
   "timezone": "",
   "title": "GPU Fleet Overview",
   "uid": "gpu-fleet-overview",
-  "version": 1
+  "version": 2
 }
