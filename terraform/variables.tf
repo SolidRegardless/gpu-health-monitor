@@ -39,3 +39,16 @@ variable "ssh_private_key_path" {
   type        = string
   default     = "~/.ssh/id_rsa"
 }
+
+variable "grafana_admin_user" {
+  description = "Grafana admin username"
+  type        = string
+  default     = "admin"
+}
+
+variable "grafana_admin_password" {
+  description = "Grafana admin password (leave empty to generate random)"
+  type        = string
+  default     = ""
+  sensitive   = true
+}

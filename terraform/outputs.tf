@@ -14,10 +14,11 @@ output "ssh_connection" {
 }
 
 output "grafana_credentials" {
-  description = "Default Grafana login credentials"
+  description = "Grafana login credentials"
+  sensitive   = true
   value = {
-    username = "admin"
-    password = "admin"
+    username = var.grafana_admin_user
+    password = local.grafana_password
   }
 }
 
@@ -45,7 +46,7 @@ output "deployment_info" {
   ╠══════════════════════════════════════════════════════════════════╣
   ║                                                                  ║
   ║  🎯 Services:                                                    ║
-  ║     Grafana:  http://${azurerm_public_ip.gpu_monitor.ip_address}:3000 (admin/admin)                   ║
+  ║     Grafana:  http://${azurerm_public_ip.gpu_monitor.ip_address}:3000                                    ║
   ║     API:      http://${azurerm_public_ip.gpu_monitor.ip_address}:8000                                ║
   ║     MLflow:   http://${azurerm_public_ip.gpu_monitor.ip_address}:5000                                ║
   ║     Adminer:  http://${azurerm_public_ip.gpu_monitor.ip_address}:8080 (DB GUI)                       ║
@@ -62,6 +63,9 @@ output "deployment_info" {
   ║     • Metric processors (validate/enrich/sink)                   ║
   ║     • ML models (anomaly detection, failure prediction)          ║
   ║     • Health scoring & alerting                                  ║
+  ║                                                                  ║
+  ║  🔐 Credentials:                                                 ║
+  ║     Run: terraform output grafana_credentials                    ║
   ║                                                                  ║
   ╚══════════════════════════════════════════════════════════════════╝
   

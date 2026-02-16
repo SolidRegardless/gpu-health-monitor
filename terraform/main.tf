@@ -5,11 +5,26 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 3.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.5"
+    }
   }
 }
 
 provider "azurerm" {
   features {}
+}
+
+# Generate random password for Grafana if not provided
+resource "random_password" "grafana_password" {
+  length  = 24
+  special = true
+  override_special = "!@#$%^&*()-_=+[]{}:?"
+}
+
+locals {
+  grafana_password = var.grafana_admin_password != "" ? var.grafana_admin_password : random_password.grafana_password.result
 }
 
 # Resource Group
@@ -182,6 +197,15 @@ resource "azurerm_linux_virtual_machine" "gpu_monitor" {
       "sudo chown -R ${var.admin_username}:${var.admin_username} /opt/gpu-health-monitor",
       "sudo usermod -aG docker ${var.admin_username}",
       "cd /opt/gpu-health-monitor/docker",
+      "echo 'Configuring credentials...'",
+      "cat > .env << 'EOF'",
+      "GRAFANA_ADMIN_USER=${var.grafana_admin_user}",
+      "GRAFANA_ADMIN_PASSWORD=${local.grafana_password}",
+      "POSTGRES_USER=gpu_monitor",
+      "POSTGRES_PASSWORD=gpu_monitor_secret",
+      "POSTGRES_DB=gpu_health",
+      "EOF",
+      "chmod 600 .env",
       "echo 'Building Docker images (this may take 5-10 minutes)...'",
       "sudo docker-compose build --parallel",
       "echo 'Starting services...'",
