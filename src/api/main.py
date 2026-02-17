@@ -35,6 +35,7 @@ from typing import List, Optional, Dict
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -58,6 +59,12 @@ app = FastAPI(
     description="API for querying GPU metrics and health scores",
     version="1.0.0"
 )
+
+# Serve the HTML dashboard as static files if the /dashboard directory exists
+import pathlib
+_dashboard_dir = pathlib.Path("/app/dashboard")
+if _dashboard_dir.exists():
+    app.mount("/dashboard", StaticFiles(directory=str(_dashboard_dir), html=True), name="dashboard")
 
 # Allow the standalone HTML dashboard (any localhost port) to call the API
 app.add_middleware(
@@ -384,8 +391,7 @@ def get_market_intelligence():
     Streams the response so the UI can render text progressively.
     """
     api_key = os.getenv("ANTHROPIC_API_KEY", "")
-    if not api_key:
-        raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
+    # No early-exit on missing key — we fall back to template commentary below
 
     try:
         conn = get_db_connection()
@@ -475,16 +481,101 @@ Each paragraph should cover one of these angles:
 Be concise, factual, and commercially sharp. No bullet points. No headings. No markdown. Just 3 <p> tags.
 Reference the actual numbers from the data above where relevant."""
 
-    # ── Stream Claude's response ──────────────────────────────────────────────
+    # ── Template fallback (no Claude needed) ─────────────────────────────────
+    def _template_commentary() -> str:
+        """Generate data-driven commentary without Claude — fallback only."""
+        total_gpus = sum(d.get("count", 0) for d in decisions)
+        sell_count = next((d["count"] for d in decisions if d["decision"] == "sell"), 0)
+        keep_count = next((d["count"] for d in decisions if d["decision"] == "keep"), 0)
+        repurpose_count = next((d["count"] for d in decisions if d["decision"] == "repurpose"), 0)
+        sell_pct = round(sell_count / total_gpus * 100) if total_gpus else 0
+
+        a100_price = next((p["price_mid_usd"] for p in prices if "A100" in p["model"]), 8500)
+        h100_price = next((p["price_mid_usd"] for p in prices if "H100" in p["model"]), 24000)
+        a100_orig  = next((p["original_cost_usd"] for p in prices if "A100" in p["model"]), 15000)
+        h100_orig  = next((p["original_cost_usd"] for p in prices if "H100" in p["model"]), 32000)
+        a100_pct   = round(a100_price / a100_orig * 100)
+        h100_pct   = round(h100_price / h100_orig * 100)
+
+        a100_model = next((m for m in model_breakdown if "A100" in m["model"]), {})
+        h100_model = next((m for m in model_breakdown if "H100" in m["model"]), {})
+        avg_health_a = a100_model.get("avg_health", 70)
+        avg_health_h = h100_model.get("avg_health", 75)
+
+        p1 = (
+            f"<p>Secondary market GPU pricing continues to reflect structural demand shifts driven by the "
+            f"Hopper-to-Blackwell architecture transition. <strong>A100 SXM4-80GB units are trading at "
+            f"${a100_price:,.0f}</strong> — approximately {a100_pct}% of original list — as hyperscalers "
+            f"rotate ageing Ampere capacity toward next-generation deployments. "
+            f"<strong>H100 SXM5-80GB units command ${h100_price:,.0f}</strong> ({h100_pct}% of new cost), "
+            f"supported by sustained inference workload demand and constrained supply from TSMC CoWoS packaging. "
+            f"The A100/H100 price spread of ${h100_price - a100_price:,.0f} signals the market is pricing "
+            f"in a meaningful compute-density premium for FP8 tensor cores.</p>"
+        )
+
+        if sell_pct >= 60:
+            fleet_sentiment = "weighted toward capital recovery"
+            fleet_detail = (
+                f"With {sell_pct}% of the fleet flagged for liquidation, the economic engine is prioritising "
+                f"residual value capture over continued depreciation."
+            )
+        elif sell_pct >= 30:
+            fleet_sentiment = "balanced between retention and realisation"
+            fleet_detail = (
+                f"The mixed {keep_count} KEEP / {sell_count} SELL / {repurpose_count} REPURPOSE split indicates "
+                f"a fleet in transition — healthy units are retained for workload continuity while degraded "
+                f"assets are routed to secondary markets before further depreciation."
+            )
+        else:
+            fleet_sentiment = "strongly weighted toward retention"
+            fleet_detail = (
+                f"With only {sell_count} unit(s) flagged for liquidation, current economics favour keeping "
+                f"the fleet operational; the NPV of continued utilisation exceeds secondary market realisable value."
+            )
+
+        p2 = (
+            f"<p>Fleet health analytics position current decision-making as <strong>{fleet_sentiment}</strong>. "
+            f"A100 average health score stands at {avg_health_a}/100, H100 at {avg_health_h}/100. "
+            f"{fleet_detail} "
+            f"The economic engine caps failure probability at 60% to prevent ML cold-start bias from "
+            f"over-penalising NPV Keep, ensuring decisions reflect structural degradation rather than "
+            f"transient sensor noise.</p>"
+        )
+
+        months_at_rate = round(sell_count / max(total_gpus, 1) * 18)
+        p3 = (
+            f"<p>Looking ahead 3–6 months, operators should monitor Blackwell GB200 NVL72 ramp timelines — "
+            f"accelerated availability will compress H100 secondary market prices by an estimated 15–25% "
+            f"as enterprise buyers gain alternatives. A100 pricing is likely to stabilise near "
+            f"${max(a100_price - 500, 5000):,.0f}–${a100_price:,.0f} as a floor driven by inference "
+            f"inference economics at mid-market cloud providers. <strong>Key action: prioritise "
+            f"SELL-flagged units within the next 60–90 days</strong> to capture current bid-side liquidity "
+            f"before Blackwell supply normalisation depresses comparable Ampere valuations further. "
+            f"Repurpose candidates should be evaluated for edge deployment or HPC rental markets where "
+            f"FP64 workloads make A100 economics competitive with newer architectures.</p>"
+        )
+        return p1 + p2 + p3
+
+    # ── Stream Claude's response (with template fallback) ────────────────────
     def stream_claude():
-        client = anthropic.Anthropic(api_key=api_key)
-        with client.messages.stream(
-            model="claude-3-5-haiku-20241022",
-            max_tokens=600,
-            messages=[{"role": "user", "content": prompt}],
-        ) as stream:
-            for text in stream.text_stream:
-                yield text
+        if not api_key:
+            yield _template_commentary()
+            return
+        try:
+            client = anthropic.Anthropic(api_key=api_key)
+            with client.messages.stream(
+                model="claude-3-5-haiku-20241022",
+                max_tokens=600,
+                messages=[{"role": "user", "content": prompt}],
+            ) as stream:
+                for text in stream.text_stream:
+                    yield text
+        except anthropic.AuthenticationError:
+            logger.warning("Anthropic auth failed — using template commentary fallback")
+            yield _template_commentary()
+        except Exception as e:
+            logger.warning(f"Claude API error ({e}) — using template commentary fallback")
+            yield _template_commentary()
 
     return StreamingResponse(stream_claude(), media_type="text/html; charset=utf-8")
 

@@ -932,7 +932,11 @@ setInterval(() => {
 // ════════════════════════════════════════════════════════════════
 // AI MARKET INTELLIGENCE  —  streams from /api/v1/market-intelligence
 // ════════════════════════════════════════════════════════════════
-const MI_API = 'http://localhost:8000/api/v1/market-intelligence';
+// Auto-detect: if served from the API container (port 8000), use a relative path.
+// If served from a local dev server (any other port), point to the API explicitly.
+const MI_API = (location.port === '8000' || location.port === '')
+    ? '/api/v1/market-intelligence'
+    : `${location.protocol}//${location.hostname}:8000/api/v1/market-intelligence`;
 
 async function loadMarketIntelligence() {
   const body  = document.getElementById('marketIntelBody');

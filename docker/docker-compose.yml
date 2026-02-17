@@ -224,6 +224,8 @@ services:
       DB_USER: "gpu_monitor"
       DB_PASSWORD: "gpu_monitor_secret"
       ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY}"
+    volumes:
+      - ../dashboard:/app/dashboard:ro
     networks:
       - gpu-monitor-net
 
