@@ -345,6 +345,25 @@ services:
     networks:
       - gpu-monitor-net
 
+  market-price-fetcher:
+    build:
+      context: ../src/market-price-fetcher
+      dockerfile: Dockerfile
+    hostname: market-price-fetcher
+    container_name: gpu-monitor-market-price-fetcher
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    environment:
+      DB_HOST: "timescaledb"
+      DB_PORT: "5432"
+      DB_NAME: "gpu_health"
+      DB_USER: "gpu_monitor"
+      DB_PASSWORD: "gpu_monitor_secret"
+      FETCH_INTERVAL_HOURS: "6"
+    networks:
+      - gpu-monitor-net
+
   mlflow:
     build:
       context: ../src/mlflow
