@@ -1656,7 +1656,7 @@
     {
       "id": 91,
       "title": "\ud83d\udcc8 Current Market Dynamics",
-      "type": "stat",
+      "type": "table",
       "gridPos": {
         "h": 6,
         "w": 8,
@@ -1674,25 +1674,20 @@
             "uid": "P0D1C26D7DC78F49D"
           },
           "format": "table",
-          "rawSql": "SELECT content::text AS \"value\" FROM v_latest_market_commentary WHERE section = 'market_dynamics'",
+          "rawSql": "SELECT content AS \"Commentary\" FROM v_latest_market_commentary WHERE section = 'market_dynamics'",
           "refId": "A"
         }
       ],
       "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
+        "showHeader": false,
+        "cellHeight": "auto",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
           ],
-          "fields": "/^value$/",
-          "values": false
-        },
-        "orientation": "auto",
-        "textMode": "value",
-        "colorMode": "none",
-        "graphMode": "none",
-        "justifyMode": "left",
-        "text": {
-          "valueSize": 14
+          "countRows": false,
+          "fields": ""
         }
       },
       "fieldConfig": {
@@ -1701,7 +1696,15 @@
             "mode": "fixed",
             "fixedColor": "text"
           },
-          "custom": {},
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto",
+              "wrapText": true
+            },
+            "inspect": false,
+            "filterable": false
+          },
           "noValue": "Loading commentary..."
         },
         "overrides": []
@@ -1711,7 +1714,7 @@
     {
       "id": 92,
       "title": "\ud83d\udda5\ufe0f Fleet Analysis",
-      "type": "stat",
+      "type": "table",
       "gridPos": {
         "h": 6,
         "w": 8,
@@ -1729,25 +1732,20 @@
             "uid": "P0D1C26D7DC78F49D"
           },
           "format": "table",
-          "rawSql": "SELECT content::text AS \"value\" FROM v_latest_market_commentary WHERE section = 'fleet_analysis'",
+          "rawSql": "SELECT content AS \"Commentary\" FROM v_latest_market_commentary WHERE section = 'fleet_analysis'",
           "refId": "A"
         }
       ],
       "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
+        "showHeader": false,
+        "cellHeight": "auto",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
           ],
-          "fields": "/^value$/",
-          "values": false
-        },
-        "orientation": "auto",
-        "textMode": "value",
-        "colorMode": "none",
-        "graphMode": "none",
-        "justifyMode": "left",
-        "text": {
-          "valueSize": 14
+          "countRows": false,
+          "fields": ""
         }
       },
       "fieldConfig": {
@@ -1756,7 +1754,15 @@
             "mode": "fixed",
             "fixedColor": "text"
           },
-          "custom": {},
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto",
+              "wrapText": true
+            },
+            "inspect": false,
+            "filterable": false
+          },
           "noValue": "Loading commentary..."
         },
         "overrides": []
@@ -1766,7 +1772,7 @@
     {
       "id": 93,
       "title": "\ud83d\udd2d Forward View (3\u20136 months)",
-      "type": "stat",
+      "type": "table",
       "gridPos": {
         "h": 6,
         "w": 8,
@@ -1784,25 +1790,20 @@
             "uid": "P0D1C26D7DC78F49D"
           },
           "format": "table",
-          "rawSql": "SELECT content::text AS \"value\" FROM v_latest_market_commentary WHERE section = 'forward_view'",
+          "rawSql": "SELECT content AS \"Commentary\" FROM v_latest_market_commentary WHERE section = 'forward_view'",
           "refId": "A"
         }
       ],
       "options": {
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
+        "showHeader": false,
+        "cellHeight": "auto",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
           ],
-          "fields": "/^value$/",
-          "values": false
-        },
-        "orientation": "auto",
-        "textMode": "value",
-        "colorMode": "none",
-        "graphMode": "none",
-        "justifyMode": "left",
-        "text": {
-          "valueSize": 14
+          "countRows": false,
+          "fields": ""
         }
       },
       "fieldConfig": {
@@ -1811,7 +1812,15 @@
             "mode": "fixed",
             "fixedColor": "text"
           },
-          "custom": {},
+          "custom": {
+            "align": "left",
+            "cellOptions": {
+              "type": "auto",
+              "wrapText": true
+            },
+            "inspect": false,
+            "filterable": false
+          },
           "noValue": "Loading commentary..."
         },
         "overrides": []
