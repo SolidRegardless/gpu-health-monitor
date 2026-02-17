@@ -532,7 +532,8 @@
           ],
           "fields": ""
         },
-        "sortBy": []
+        "sortBy": [],
+        "cellHeight": "auto"
       },
       "fieldConfig": {
         "defaults": {
@@ -774,18 +775,17 @@
                 "value": 420
               },
               {
-                "id": "custom.displayMode",
-                "value": "auto"
-              },
-              {
-                "id": "custom.wrap",
-                "value": true
-              },
-              {
                 "id": "color",
                 "value": {
                   "mode": "fixed",
                   "fixedColor": "text"
+                }
+              },
+              {
+                "id": "cellOptions",
+                "value": {
+                  "type": "auto",
+                  "wrapText": true
                 }
               }
             ]
@@ -1017,7 +1017,8 @@
           ],
           "fields": ""
         },
-        "sortBy": []
+        "sortBy": [],
+        "cellHeight": "auto"
       },
       "fieldConfig": {
         "defaults": {
@@ -1259,18 +1260,17 @@
                 "value": 420
               },
               {
-                "id": "custom.displayMode",
-                "value": "auto"
-              },
-              {
-                "id": "custom.wrap",
-                "value": true
-              },
-              {
                 "id": "color",
                 "value": {
                   "mode": "fixed",
                   "fixedColor": "text"
+                }
+              },
+              {
+                "id": "cellOptions",
+                "value": {
+                  "type": "auto",
+                  "wrapText": true
                 }
               }
             ]
