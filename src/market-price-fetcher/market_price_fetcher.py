@@ -313,29 +313,40 @@ def generate_market_commentary(conn) -> None:
         """)
         prices = cursor.fetchall()
 
-        # Fleet decision summary
+        # Fleet decision summary — query underlying table for full NPV columns
         cursor.execute("""
+            WITH latest AS (
+                SELECT DISTINCT ON (gpu_uuid)
+                    gpu_uuid, decision, health_score, npv_sell, npv_keep
+                FROM gpu_economic_decisions
+                ORDER BY gpu_uuid, time DESC
+            )
             SELECT decision, COUNT(*) as n,
                    ROUND(AVG(health_score)::numeric,1) as avg_health,
-                   ROUND(AVG(npv_sell)::numeric,0) as avg_sell,
-                   ROUND(AVG(npv_keep)::numeric,0) as avg_keep
-            FROM v_latest_economic_decisions GROUP BY decision ORDER BY n DESC
+                   ROUND(AVG(npv_sell)::numeric,0)     as avg_sell,
+                   ROUND(AVG(npv_keep)::numeric,0)     as avg_keep
+            FROM latest GROUP BY decision ORDER BY n DESC
         """)
         decisions = cursor.fetchall()
 
         # Per-model breakdown
         cursor.execute("""
+            WITH latest_dec AS (
+                SELECT DISTINCT ON (gpu_uuid) gpu_uuid, decision
+                FROM gpu_economic_decisions ORDER BY gpu_uuid, time DESC
+            ),
+            latest_health AS (
+                SELECT DISTINCT ON (gpu_uuid) gpu_uuid, overall_score
+                FROM gpu_health_scores ORDER BY gpu_uuid, time DESC
+            )
             SELECT a.model, COUNT(*) as total,
                    SUM(CASE WHEN d.decision='sell'      THEN 1 ELSE 0 END) as sell_n,
                    SUM(CASE WHEN d.decision='keep'      THEN 1 ELSE 0 END) as keep_n,
                    SUM(CASE WHEN d.decision='repurpose' THEN 1 ELSE 0 END) as repur_n,
                    ROUND(AVG(h.overall_score)::numeric,1) as avg_health
             FROM gpu_assets a
-            JOIN v_latest_economic_decisions d ON a.gpu_uuid = d.gpu_uuid
-            JOIN (
-                SELECT DISTINCT ON (gpu_uuid) gpu_uuid, overall_score
-                FROM gpu_health_scores ORDER BY gpu_uuid, time DESC
-            ) h ON a.gpu_uuid = h.gpu_uuid
+            JOIN latest_dec d ON a.gpu_uuid = d.gpu_uuid
+            JOIN latest_health h ON a.gpu_uuid = h.gpu_uuid
             GROUP BY a.model ORDER BY a.model
         """)
         model_rows = cursor.fetchall()
