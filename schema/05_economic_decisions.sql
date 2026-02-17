@@ -50,11 +50,17 @@ SELECT add_retention_policy('gpu_economic_decisions', INTERVAL '730 days', if_no
 GRANT ALL ON gpu_economic_decisions TO gpu_monitor;
 
 -- Create a view for latest decisions
+-- Exposes npv_keep, npv_sell, npv_repurpose so dashboards and the
+-- market-intelligence API can query them directly without joining
+-- the full hypertable.
 CREATE OR REPLACE VIEW v_latest_economic_decisions AS
 SELECT DISTINCT ON (gpu_uuid)
     time,
     gpu_uuid,
     decision,
+    npv_keep,
+    npv_sell,
+    npv_repurpose,
     expected_value,
     confidence,
     rationale,
