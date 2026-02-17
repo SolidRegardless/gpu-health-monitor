@@ -5,7 +5,10 @@
     "list": [
       {
         "builtIn": 1,
-        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
@@ -22,28 +25,43 @@
   "links": [],
   "liveNow": false,
   "panels": [
-
     {
       "id": 1,
       "type": "text",
-      "title": "GPU Fleet Economics · Secondary Market",
-      "gridPos": { "h": 3, "w": 24, "x": 0, "y": 0 },
+      "title": "GPU Fleet Economics \u00b7 Secondary Market",
+      "gridPos": {
+        "h": 3,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
       "options": {
         "mode": "markdown",
-        "content": "## 💰 GPU Fleet Economics · Secondary Market\n\nCompares **Operational NPV** (present value of keeping the GPU) vs **Secondary Market Value** (liquidation price) for each GPU in the fleet.\n\n- **NPV Keep** = discounted future revenue from continued GPU operation\n- **NPV Sell** = expected net proceeds from secondary market sale today\n- **Sell Signal** = triggered when NPV Sell > NPV Keep × 1.05 (5% margin)\n\n> Live market prices are fetched every 6 hours from JarvisLabs and cross-referenced with secondary-market listings.",
-        "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false }
+        "content": "## \ud83d\udcb0 GPU Fleet Economics \u00b7 Secondary Market\n\nCompares **Operational NPV** (present value of keeping the GPU) vs **Secondary Market Value** (liquidation price) for each GPU in the fleet.\n\n- **NPV Keep** = discounted future revenue from continued GPU operation\n- **NPV Sell** = expected net proceeds from secondary market sale today\n- **Sell Signal** = triggered when NPV Sell > NPV Keep \u00d7 1.05 (5% margin)\n\n> Live market prices are fetched every 6 hours from JarvisLabs and cross-referenced with secondary-market listings.",
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        }
       },
       "transparent": false,
       "datasource": null
     },
-
     {
       "id": 2,
       "type": "stat",
       "title": "Fleet Secondary Value",
       "description": "Total liquidation value of fleet (sum of NPV Sell across all GPUs)",
-      "gridPos": { "h": 4, "w": 5, "x": 0, "y": 3 },
-      "datasource": { "type": "postgres", "uid": "P0D1C26D7DC78F49D" },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 0,
+        "y": 3
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
       "targets": [
         {
           "refId": "A",
@@ -52,7 +70,13 @@
         }
       ],
       "options": {
-        "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" },
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
         "orientation": "auto",
         "textMode": "value",
         "colorMode": "value",
@@ -63,10 +87,18 @@
         "defaults": {
           "unit": "currencyUSD",
           "decimals": 0,
-          "color": { "mode": "fixed", "fixedColor": "#3fb950" },
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#3fb950"
+          },
           "thresholds": {
             "mode": "absolute",
-            "steps": [{ "value": null, "color": "#3fb950" }]
+            "steps": [
+              {
+                "value": null,
+                "color": "#3fb950"
+              }
+            ]
           },
           "mappings": []
         },
@@ -74,14 +106,21 @@
       },
       "transparent": false
     },
-
     {
       "id": 3,
       "type": "stat",
       "title": "Sell Signals",
       "description": "Number of GPUs where secondary market value exceeds operational NPV",
-      "gridPos": { "h": 4, "w": 4, "x": 5, "y": 3 },
-      "datasource": { "type": "postgres", "uid": "P0D1C26D7DC78F49D" },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 5,
+        "y": 3
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
       "targets": [
         {
           "refId": "A",
@@ -90,7 +129,13 @@
         }
       ],
       "options": {
-        "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" },
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
         "orientation": "auto",
         "textMode": "value_and_name",
         "colorMode": "background",
@@ -104,26 +149,44 @@
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "value": null, "color": "#3fb950" },
-              { "value": 1, "color": "#d29922" },
-              { "value": 3, "color": "#f85149" }
+              {
+                "value": null,
+                "color": "#3fb950"
+              },
+              {
+                "value": 1,
+                "color": "#d29922"
+              },
+              {
+                "value": 3,
+                "color": "#f85149"
+              }
             ]
           },
-          "color": { "mode": "thresholds" },
+          "color": {
+            "mode": "thresholds"
+          },
           "mappings": []
         },
         "overrides": []
       },
       "transparent": false
     },
-
     {
       "id": 4,
       "type": "stat",
       "title": "A100 Market Price (Live)",
       "description": "Latest secondary market mid-price for NVIDIA A100-SXM4-80GB (used, good condition)",
-      "gridPos": { "h": 4, "w": 5, "x": 9, "y": 3 },
-      "datasource": { "type": "postgres", "uid": "P0D1C26D7DC78F49D" },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 9,
+        "y": 3
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
       "targets": [
         {
           "refId": "A",
@@ -132,7 +195,13 @@
         }
       ],
       "options": {
-        "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" },
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
         "orientation": "auto",
         "textMode": "value",
         "colorMode": "value",
@@ -144,10 +213,18 @@
           "unit": "currencyUSD",
           "decimals": 0,
           "displayName": "~${__value.text}",
-          "color": { "mode": "fixed", "fixedColor": "#3fb950" },
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#3fb950"
+          },
           "thresholds": {
             "mode": "absolute",
-            "steps": [{ "value": null, "color": "#3fb950" }]
+            "steps": [
+              {
+                "value": null,
+                "color": "#3fb950"
+              }
+            ]
           },
           "mappings": []
         },
@@ -155,14 +232,21 @@
       },
       "transparent": false
     },
-
     {
       "id": 5,
       "type": "stat",
       "title": "H100 Market Price (Live)",
       "description": "Latest secondary market mid-price for NVIDIA H100-SXM5-80GB (used, good condition)",
-      "gridPos": { "h": 4, "w": 5, "x": 14, "y": 3 },
-      "datasource": { "type": "postgres", "uid": "P0D1C26D7DC78F49D" },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 14,
+        "y": 3
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
       "targets": [
         {
           "refId": "A",
@@ -171,7 +255,13 @@
         }
       ],
       "options": {
-        "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" },
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
         "orientation": "auto",
         "textMode": "value",
         "colorMode": "value",
@@ -182,10 +272,18 @@
         "defaults": {
           "unit": "currencyUSD",
           "decimals": 0,
-          "color": { "mode": "fixed", "fixedColor": "#bc8cff" },
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#bc8cff"
+          },
           "thresholds": {
             "mode": "absolute",
-            "steps": [{ "value": null, "color": "#bc8cff" }]
+            "steps": [
+              {
+                "value": null,
+                "color": "#bc8cff"
+              }
+            ]
           },
           "mappings": []
         },
@@ -193,14 +291,21 @@
       },
       "transparent": false
     },
-
     {
       "id": 6,
       "type": "stat",
       "title": "Prices Last Updated",
       "description": "Timestamp of the most recent market price fetch",
-      "gridPos": { "h": 4, "w": 5, "x": 19, "y": 3 },
-      "datasource": { "type": "postgres", "uid": "P0D1C26D7DC78F49D" },
+      "gridPos": {
+        "h": 4,
+        "w": 5,
+        "x": 19,
+        "y": 3
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
       "targets": [
         {
           "refId": "A",
@@ -209,7 +314,13 @@
         }
       ],
       "options": {
-        "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" },
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
         "orientation": "auto",
         "textMode": "value",
         "colorMode": "value",
@@ -219,10 +330,18 @@
       "fieldConfig": {
         "defaults": {
           "unit": "dateTimeFromNow",
-          "color": { "mode": "fixed", "fixedColor": "#58a6ff" },
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#58a6ff"
+          },
           "thresholds": {
             "mode": "absolute",
-            "steps": [{ "value": null, "color": "#58a6ff" }]
+            "steps": [
+              {
+                "value": null,
+                "color": "#58a6ff"
+              }
+            ]
           },
           "mappings": []
         },
@@ -230,24 +349,35 @@
       },
       "transparent": false
     },
-
     {
       "id": 10,
       "type": "row",
-      "title": "🟢 A100 — NVIDIA A100 SXM4-80GB",
+      "title": "\ud83d\udfe2 A100 \u2014 NVIDIA A100 SXM4-80GB",
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 7 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 7
+      },
       "panels": [],
       "datasource": null
     },
-
     {
       "id": 11,
       "type": "barchart",
       "title": "A100 NPV vs Original Cost",
       "description": "Per-GPU comparison: original purchase cost, secondary market NPV, and operational NPV (keep value)",
-      "gridPos": { "h": 10, "w": 15, "x": 0, "y": 8 },
-      "datasource": { "type": "postgres", "uid": "P0D1C26D7DC78F49D" },
+      "gridPos": {
+        "h": 10,
+        "w": 15,
+        "x": 0,
+        "y": 8
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
       "targets": [
         {
           "refId": "A",
@@ -261,8 +391,15 @@
         "groupWidth": 0.7,
         "fillOpacity": 85,
         "gradientMode": "none",
-        "tooltipOptions": { "mode": "multi", "sort": "none" },
-        "legend": { "displayMode": "list", "placement": "bottom", "calcs": [] },
+        "tooltipOptions": {
+          "mode": "multi",
+          "sort": "none"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
         "orientation": "auto",
         "stacking": "none",
         "showValue": "never",
@@ -272,63 +409,129 @@
         "defaults": {
           "unit": "currencyUSD",
           "decimals": 0,
-          "color": { "mode": "fixed" },
+          "color": {
+            "mode": "fixed"
+          },
           "custom": {
             "axisPlacement": "auto",
             "axisLabel": "",
             "axisColorMode": "text",
-            "scaleDistribution": { "type": "linear" },
-            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
             "fillOpacity": 85
           }
         },
         "overrides": [
           {
-            "matcher": { "id": "byName", "options": "Original Cost" },
+            "matcher": {
+              "id": "byName",
+              "options": "Original Cost"
+            },
             "properties": [
-              { "id": "color", "value": { "mode": "fixed", "fixedColor": "#484f58" } },
-              { "id": "unit", "value": "currencyUSD" },
-              { "id": "decimals", "value": 0 }
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#484f58"
+                }
+              },
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
             ]
           },
           {
-            "matcher": { "id": "byName", "options": "Secondary Market (NPV Sell)" },
+            "matcher": {
+              "id": "byName",
+              "options": "Secondary Market (NPV Sell)"
+            },
             "properties": [
-              { "id": "color", "value": { "mode": "fixed", "fixedColor": "#3fb950" } },
-              { "id": "unit", "value": "currencyUSD" },
-              { "id": "decimals", "value": 0 }
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#3fb950"
+                }
+              },
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
             ]
           },
           {
-            "matcher": { "id": "byName", "options": "Operational Value (NPV Keep)" },
+            "matcher": {
+              "id": "byName",
+              "options": "Operational Value (NPV Keep)"
+            },
             "properties": [
-              { "id": "color", "value": { "mode": "fixed", "fixedColor": "#1f6feb" } },
-              { "id": "unit", "value": "currencyUSD" },
-              { "id": "decimals", "value": 0 }
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#1f6feb"
+                }
+              },
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
             ]
           }
         ]
       },
       "transparent": false
     },
-
     {
       "id": 12,
       "type": "table",
       "title": "A100 GPU List",
       "description": "Health, utilisation, and economic decision for each A100 GPU",
-      "gridPos": { "h": 10, "w": 9, "x": 15, "y": 8 },
-      "datasource": { "type": "postgres", "uid": "P0D1C26D7DC78F49D" },
+      "gridPos": {
+        "h": 14,
+        "w": 9,
+        "x": 15,
+        "y": 8
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
       "targets": [
         {
           "refId": "A",
-          "rawSql": "WITH latest_dec AS (\n  SELECT DISTINCT ON (gpu_uuid)\n    gpu_uuid, npv_keep, npv_sell, decision, health_score\n  FROM gpu_economic_decisions\n  ORDER BY gpu_uuid, time DESC\n),\nlatest_health AS (\n  SELECT DISTINCT ON (gpu_uuid)\n    gpu_uuid, overall_score, health_grade\n  FROM gpu_health_scores\n  ORDER BY gpu_uuid, time DESC\n),\nlatest_metrics AS (\n  SELECT DISTINCT ON (gpu_uuid)\n    gpu_uuid, gpu_temp, sm_active\n  FROM gpu_metrics\n  ORDER BY gpu_uuid, time DESC\n)\nSELECT\n  a.gpu_uuid AS \"UUID\",\n  h.health_grade AS \"Grade\",\n  ROUND(h.overall_score::numeric, 0) AS \"Health\",\n  EXTRACT(MONTH FROM AGE(NOW(), a.deployment_date))::int AS \"Age (mo)\",\n  ROUND(m2.gpu_temp::numeric, 1) AS \"Temp °C\",\n  ROUND((m2.sm_active * 100)::numeric, 0) AS \"Util %\",\n  UPPER(d.decision) AS \"Decision\",\n  ROUND(d.npv_sell::numeric, 0) AS \"NPV Sell $\",\n  ROUND(d.npv_keep::numeric, 0) AS \"NPV Keep $\"\nFROM gpu_assets a\nJOIN gpu_datacenter_mapping dm ON a.gpu_uuid = dm.gpu_uuid\nLEFT JOIN latest_dec d ON a.gpu_uuid = d.gpu_uuid\nLEFT JOIN latest_health h ON a.gpu_uuid = h.gpu_uuid\nLEFT JOIN latest_metrics m2 ON a.gpu_uuid = m2.gpu_uuid\nWHERE a.model LIKE '%A100%'\n  AND ('$datacenter' = 'ALL' OR dm.datacenter = '$datacenter')\nORDER BY h.overall_score ASC NULLS LAST",
+          "rawSql": "WITH latest_dec AS (\n  SELECT DISTINCT ON (gpu_uuid)\n    gpu_uuid, npv_keep, npv_sell, decision, health_score, rationale, confidence\n  FROM gpu_economic_decisions\n  ORDER BY gpu_uuid, time DESC\n),\nlatest_health AS (\n  SELECT DISTINCT ON (gpu_uuid) gpu_uuid, overall_score, health_grade\n  FROM gpu_health_scores ORDER BY gpu_uuid, time DESC\n),\nlatest_metrics AS (\n  SELECT DISTINCT ON (gpu_uuid) gpu_uuid, gpu_temp, sm_active\n  FROM gpu_metrics ORDER BY gpu_uuid, time DESC\n)\nSELECT\n  a.gpu_uuid AS \"UUID\",\n  h.health_grade AS \"Grade\",\n  ROUND(h.overall_score::numeric, 0) AS \"Health\",\n  EXTRACT(MONTH FROM AGE(NOW(), a.deployment_date))::int AS \"Age (mo)\",\n  ROUND(m2.gpu_temp::numeric, 1) AS \"Temp \u00b0C\",\n  ROUND((m2.sm_active)::numeric, 0) AS \"Util %\",\n  UPPER(d.decision) AS \"Decision\",\n  ROUND(d.npv_sell::numeric, 0) AS \"NPV Sell $\",\n  ROUND(d.npv_keep::numeric, 0) AS \"NPV Keep $\",\n  ROUND((d.confidence * 100)::numeric, 0) AS \"Conf %\",\n  d.rationale AS \"Analysis\"\nFROM gpu_assets a\nJOIN gpu_datacenter_mapping dm ON a.gpu_uuid = dm.gpu_uuid\nLEFT JOIN latest_dec d ON a.gpu_uuid = d.gpu_uuid\nLEFT JOIN latest_health h ON a.gpu_uuid = h.gpu_uuid\nLEFT JOIN latest_metrics m2 ON a.gpu_uuid = m2.gpu_uuid\nWHERE a.model LIKE '%A100%'\n  AND (dm.datacenter = '$datacenter' OR '$datacenter' = 'ALL')\nORDER BY h.overall_score ASC NULLS LAST",
           "format": "table"
         }
       ],
       "options": {
         "showHeader": true,
-        "footer": { "show": false, "reducer": ["sum"], "fields": "" },
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        },
         "sortBy": []
       },
       "fieldConfig": {
@@ -339,100 +542,327 @@
             "inspect": false,
             "minWidth": 50
           },
-          "color": { "mode": "thresholds" },
+          "color": {
+            "mode": "thresholds"
+          },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
-            "steps": [{ "value": null, "color": "green" }]
+            "steps": [
+              {
+                "value": null,
+                "color": "green"
+              }
+            ]
           }
         },
         "overrides": [
           {
-            "matcher": { "id": "byName", "options": "Grade" },
+            "matcher": {
+              "id": "byName",
+              "options": "Grade"
+            },
             "properties": [
-              { "id": "custom.displayMode", "value": "color-background" },
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              },
               {
                 "id": "mappings",
                 "value": [
-                  { "type": "value", "options": { "excellent": { "color": "#3fb950", "index": 0 } } },
-                  { "type": "value", "options": { "good":      { "color": "#58a6ff", "index": 1 } } },
-                  { "type": "value", "options": { "fair":      { "color": "#d29922", "index": 2 } } },
-                  { "type": "value", "options": { "degraded":  { "color": "#e3702d", "index": 3 } } },
-                  { "type": "value", "options": { "poor":      { "color": "#f85149", "index": 4 } } }
+                  {
+                    "type": "value",
+                    "options": {
+                      "excellent": {
+                        "color": "#3fb950",
+                        "index": 0
+                      }
+                    }
+                  },
+                  {
+                    "type": "value",
+                    "options": {
+                      "good": {
+                        "color": "#58a6ff",
+                        "index": 1
+                      }
+                    }
+                  },
+                  {
+                    "type": "value",
+                    "options": {
+                      "fair": {
+                        "color": "#d29922",
+                        "index": 2
+                      }
+                    }
+                  },
+                  {
+                    "type": "value",
+                    "options": {
+                      "degraded": {
+                        "color": "#e3702d",
+                        "index": 3
+                      }
+                    }
+                  },
+                  {
+                    "type": "value",
+                    "options": {
+                      "poor": {
+                        "color": "#f85149",
+                        "index": 4
+                      }
+                    }
+                  }
                 ]
               }
             ]
           },
           {
-            "matcher": { "id": "byName", "options": "Decision" },
+            "matcher": {
+              "id": "byName",
+              "options": "Decision"
+            },
             "properties": [
-              { "id": "custom.displayMode", "value": "color-background" },
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              },
               {
                 "id": "mappings",
                 "value": [
-                  { "type": "value", "options": { "KEEP":      { "color": "#1f6feb", "index": 0 } } },
-                  { "type": "value", "options": { "SELL":      { "color": "#f85149", "index": 1 } } },
-                  { "type": "value", "options": { "REPURPOSE": { "color": "#bc8cff", "index": 2 } } }
+                  {
+                    "type": "value",
+                    "options": {
+                      "KEEP": {
+                        "color": "#1f6feb",
+                        "index": 0
+                      }
+                    }
+                  },
+                  {
+                    "type": "value",
+                    "options": {
+                      "SELL": {
+                        "color": "#f85149",
+                        "index": 1
+                      }
+                    }
+                  },
+                  {
+                    "type": "value",
+                    "options": {
+                      "REPURPOSE": {
+                        "color": "#bc8cff",
+                        "index": 2
+                      }
+                    }
+                  }
                 ]
               }
             ]
           },
           {
-            "matcher": { "id": "byName", "options": "Health" },
+            "matcher": {
+              "id": "byName",
+              "options": "Health"
+            },
             "properties": [
-              { "id": "unit", "value": "short" },
+              {
+                "id": "unit",
+                "value": "short"
+              },
               {
                 "id": "thresholds",
                 "value": {
                   "mode": "absolute",
                   "steps": [
-                    { "value": null,  "color": "#f85149" },
-                    { "value": 70,    "color": "#d29922" },
-                    { "value": 85,    "color": "#3fb950" }
+                    {
+                      "value": null,
+                      "color": "#f85149"
+                    },
+                    {
+                      "value": 70,
+                      "color": "#d29922"
+                    },
+                    {
+                      "value": 85,
+                      "color": "#3fb950"
+                    }
                   ]
                 }
               },
-              { "id": "custom.displayMode", "value": "color-text" }
+              {
+                "id": "custom.displayMode",
+                "value": "color-text"
+              }
             ]
           },
           {
-            "matcher": { "id": "byName", "options": "NPV Sell $" },
-            "properties": [{ "id": "unit", "value": "currencyUSD" }, { "id": "decimals", "value": 0 }]
+            "matcher": {
+              "id": "byName",
+              "options": "NPV Sell $"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
           },
           {
-            "matcher": { "id": "byName", "options": "NPV Keep $" },
-            "properties": [{ "id": "unit", "value": "currencyUSD" }, { "id": "decimals", "value": 0 }]
+            "matcher": {
+              "id": "byName",
+              "options": "NPV Keep $"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
           },
           {
-            "matcher": { "id": "byName", "options": "Temp °C" },
-            "properties": [{ "id": "unit", "value": "celsius" }, { "id": "decimals", "value": 1 }]
+            "matcher": {
+              "id": "byName",
+              "options": "Temp \u00b0C"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
           },
           {
-            "matcher": { "id": "byName", "options": "Util %" },
-            "properties": [{ "id": "unit", "value": "percent" }, { "id": "decimals", "value": 0 }]
+            "matcher": {
+              "id": "byName",
+              "options": "Util %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Analysis"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 420
+              },
+              {
+                "id": "custom.displayMode",
+                "value": "auto"
+              },
+              {
+                "id": "custom.wrap",
+                "value": true
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Conf %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "custom.width",
+                "value": 65
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 60
+                    },
+                    {
+                      "color": "green",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.displayMode",
+                "value": "color-text"
+              }
+            ]
           }
         ]
       },
       "transparent": false
     },
-
     {
       "id": 20,
       "type": "row",
-      "title": "🟣 H100 — NVIDIA H100 SXM5-80GB",
+      "title": "\ud83d\udfe3 H100 \u2014 NVIDIA H100 SXM5-80GB",
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 18 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
       "panels": [],
       "datasource": null
     },
-
     {
       "id": 21,
       "type": "barchart",
       "title": "H100 NPV vs Original Cost",
       "description": "Per-GPU comparison: original purchase cost, secondary market NPV, and operational NPV (keep value)",
-      "gridPos": { "h": 10, "w": 15, "x": 0, "y": 19 },
-      "datasource": { "type": "postgres", "uid": "P0D1C26D7DC78F49D" },
+      "gridPos": {
+        "h": 10,
+        "w": 15,
+        "x": 0,
+        "y": 19
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
       "targets": [
         {
           "refId": "A",
@@ -446,8 +876,15 @@
         "groupWidth": 0.7,
         "fillOpacity": 85,
         "gradientMode": "none",
-        "tooltipOptions": { "mode": "multi", "sort": "none" },
-        "legend": { "displayMode": "list", "placement": "bottom", "calcs": [] },
+        "tooltipOptions": {
+          "mode": "multi",
+          "sort": "none"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        },
         "orientation": "auto",
         "stacking": "none",
         "showValue": "never",
@@ -457,63 +894,129 @@
         "defaults": {
           "unit": "currencyUSD",
           "decimals": 0,
-          "color": { "mode": "fixed" },
+          "color": {
+            "mode": "fixed"
+          },
           "custom": {
             "axisPlacement": "auto",
             "axisLabel": "",
             "axisColorMode": "text",
-            "scaleDistribution": { "type": "linear" },
-            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
             "fillOpacity": 85
           }
         },
         "overrides": [
           {
-            "matcher": { "id": "byName", "options": "Original Cost" },
+            "matcher": {
+              "id": "byName",
+              "options": "Original Cost"
+            },
             "properties": [
-              { "id": "color", "value": { "mode": "fixed", "fixedColor": "#484f58" } },
-              { "id": "unit", "value": "currencyUSD" },
-              { "id": "decimals", "value": 0 }
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#484f58"
+                }
+              },
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
             ]
           },
           {
-            "matcher": { "id": "byName", "options": "Secondary Market (NPV Sell)" },
+            "matcher": {
+              "id": "byName",
+              "options": "Secondary Market (NPV Sell)"
+            },
             "properties": [
-              { "id": "color", "value": { "mode": "fixed", "fixedColor": "#3fb950" } },
-              { "id": "unit", "value": "currencyUSD" },
-              { "id": "decimals", "value": 0 }
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#3fb950"
+                }
+              },
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
             ]
           },
           {
-            "matcher": { "id": "byName", "options": "Operational Value (NPV Keep)" },
+            "matcher": {
+              "id": "byName",
+              "options": "Operational Value (NPV Keep)"
+            },
             "properties": [
-              { "id": "color", "value": { "mode": "fixed", "fixedColor": "#1f6feb" } },
-              { "id": "unit", "value": "currencyUSD" },
-              { "id": "decimals", "value": 0 }
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#1f6feb"
+                }
+              },
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
             ]
           }
         ]
       },
       "transparent": false
     },
-
     {
       "id": 22,
       "type": "table",
       "title": "H100 GPU List",
       "description": "Health, utilisation, and economic decision for each H100 GPU",
-      "gridPos": { "h": 10, "w": 9, "x": 15, "y": 19 },
-      "datasource": { "type": "postgres", "uid": "P0D1C26D7DC78F49D" },
+      "gridPos": {
+        "h": 14,
+        "w": 9,
+        "x": 15,
+        "y": 19
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
       "targets": [
         {
           "refId": "A",
-          "rawSql": "WITH latest_dec AS (\n  SELECT DISTINCT ON (gpu_uuid)\n    gpu_uuid, npv_keep, npv_sell, decision, health_score\n  FROM gpu_economic_decisions\n  ORDER BY gpu_uuid, time DESC\n),\nlatest_health AS (\n  SELECT DISTINCT ON (gpu_uuid)\n    gpu_uuid, overall_score, health_grade\n  FROM gpu_health_scores\n  ORDER BY gpu_uuid, time DESC\n),\nlatest_metrics AS (\n  SELECT DISTINCT ON (gpu_uuid)\n    gpu_uuid, gpu_temp, sm_active\n  FROM gpu_metrics\n  ORDER BY gpu_uuid, time DESC\n)\nSELECT\n  a.gpu_uuid AS \"UUID\",\n  h.health_grade AS \"Grade\",\n  ROUND(h.overall_score::numeric, 0) AS \"Health\",\n  EXTRACT(MONTH FROM AGE(NOW(), a.deployment_date))::int AS \"Age (mo)\",\n  ROUND(m2.gpu_temp::numeric, 1) AS \"Temp °C\",\n  ROUND((m2.sm_active * 100)::numeric, 0) AS \"Util %\",\n  UPPER(d.decision) AS \"Decision\",\n  ROUND(d.npv_sell::numeric, 0) AS \"NPV Sell $\",\n  ROUND(d.npv_keep::numeric, 0) AS \"NPV Keep $\"\nFROM gpu_assets a\nJOIN gpu_datacenter_mapping dm ON a.gpu_uuid = dm.gpu_uuid\nLEFT JOIN latest_dec d ON a.gpu_uuid = d.gpu_uuid\nLEFT JOIN latest_health h ON a.gpu_uuid = h.gpu_uuid\nLEFT JOIN latest_metrics m2 ON a.gpu_uuid = m2.gpu_uuid\nWHERE a.model LIKE '%H100%'\n  AND ('$datacenter' = 'ALL' OR dm.datacenter = '$datacenter')\nORDER BY h.overall_score ASC NULLS LAST",
+          "rawSql": "WITH latest_dec AS (\n  SELECT DISTINCT ON (gpu_uuid)\n    gpu_uuid, npv_keep, npv_sell, decision, health_score, rationale, confidence\n  FROM gpu_economic_decisions\n  ORDER BY gpu_uuid, time DESC\n),\nlatest_health AS (\n  SELECT DISTINCT ON (gpu_uuid) gpu_uuid, overall_score, health_grade\n  FROM gpu_health_scores ORDER BY gpu_uuid, time DESC\n),\nlatest_metrics AS (\n  SELECT DISTINCT ON (gpu_uuid) gpu_uuid, gpu_temp, sm_active\n  FROM gpu_metrics ORDER BY gpu_uuid, time DESC\n)\nSELECT\n  a.gpu_uuid AS \"UUID\",\n  h.health_grade AS \"Grade\",\n  ROUND(h.overall_score::numeric, 0) AS \"Health\",\n  EXTRACT(MONTH FROM AGE(NOW(), a.deployment_date))::int AS \"Age (mo)\",\n  ROUND(m2.gpu_temp::numeric, 1) AS \"Temp \u00b0C\",\n  ROUND((m2.sm_active)::numeric, 0) AS \"Util %\",\n  UPPER(d.decision) AS \"Decision\",\n  ROUND(d.npv_sell::numeric, 0) AS \"NPV Sell $\",\n  ROUND(d.npv_keep::numeric, 0) AS \"NPV Keep $\",\n  ROUND((d.confidence * 100)::numeric, 0) AS \"Conf %\",\n  d.rationale AS \"Analysis\"\nFROM gpu_assets a\nJOIN gpu_datacenter_mapping dm ON a.gpu_uuid = dm.gpu_uuid\nLEFT JOIN latest_dec d ON a.gpu_uuid = d.gpu_uuid\nLEFT JOIN latest_health h ON a.gpu_uuid = h.gpu_uuid\nLEFT JOIN latest_metrics m2 ON a.gpu_uuid = m2.gpu_uuid\nWHERE a.model LIKE '%H100%'\n  AND (dm.datacenter = '$datacenter' OR '$datacenter' = 'ALL')\nORDER BY h.overall_score ASC NULLS LAST",
           "format": "table"
         }
       ],
       "options": {
         "showHeader": true,
-        "footer": { "show": false, "reducer": ["sum"], "fields": "" },
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "fields": ""
+        },
         "sortBy": []
       },
       "fieldConfig": {
@@ -524,100 +1027,327 @@
             "inspect": false,
             "minWidth": 50
           },
-          "color": { "mode": "thresholds" },
+          "color": {
+            "mode": "thresholds"
+          },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
-            "steps": [{ "value": null, "color": "green" }]
+            "steps": [
+              {
+                "value": null,
+                "color": "green"
+              }
+            ]
           }
         },
         "overrides": [
           {
-            "matcher": { "id": "byName", "options": "Grade" },
+            "matcher": {
+              "id": "byName",
+              "options": "Grade"
+            },
             "properties": [
-              { "id": "custom.displayMode", "value": "color-background" },
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              },
               {
                 "id": "mappings",
                 "value": [
-                  { "type": "value", "options": { "excellent": { "color": "#3fb950", "index": 0 } } },
-                  { "type": "value", "options": { "good":      { "color": "#58a6ff", "index": 1 } } },
-                  { "type": "value", "options": { "fair":      { "color": "#d29922", "index": 2 } } },
-                  { "type": "value", "options": { "degraded":  { "color": "#e3702d", "index": 3 } } },
-                  { "type": "value", "options": { "poor":      { "color": "#f85149", "index": 4 } } }
+                  {
+                    "type": "value",
+                    "options": {
+                      "excellent": {
+                        "color": "#3fb950",
+                        "index": 0
+                      }
+                    }
+                  },
+                  {
+                    "type": "value",
+                    "options": {
+                      "good": {
+                        "color": "#58a6ff",
+                        "index": 1
+                      }
+                    }
+                  },
+                  {
+                    "type": "value",
+                    "options": {
+                      "fair": {
+                        "color": "#d29922",
+                        "index": 2
+                      }
+                    }
+                  },
+                  {
+                    "type": "value",
+                    "options": {
+                      "degraded": {
+                        "color": "#e3702d",
+                        "index": 3
+                      }
+                    }
+                  },
+                  {
+                    "type": "value",
+                    "options": {
+                      "poor": {
+                        "color": "#f85149",
+                        "index": 4
+                      }
+                    }
+                  }
                 ]
               }
             ]
           },
           {
-            "matcher": { "id": "byName", "options": "Decision" },
+            "matcher": {
+              "id": "byName",
+              "options": "Decision"
+            },
             "properties": [
-              { "id": "custom.displayMode", "value": "color-background" },
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              },
               {
                 "id": "mappings",
                 "value": [
-                  { "type": "value", "options": { "KEEP":      { "color": "#1f6feb", "index": 0 } } },
-                  { "type": "value", "options": { "SELL":      { "color": "#f85149", "index": 1 } } },
-                  { "type": "value", "options": { "REPURPOSE": { "color": "#bc8cff", "index": 2 } } }
+                  {
+                    "type": "value",
+                    "options": {
+                      "KEEP": {
+                        "color": "#1f6feb",
+                        "index": 0
+                      }
+                    }
+                  },
+                  {
+                    "type": "value",
+                    "options": {
+                      "SELL": {
+                        "color": "#f85149",
+                        "index": 1
+                      }
+                    }
+                  },
+                  {
+                    "type": "value",
+                    "options": {
+                      "REPURPOSE": {
+                        "color": "#bc8cff",
+                        "index": 2
+                      }
+                    }
+                  }
                 ]
               }
             ]
           },
           {
-            "matcher": { "id": "byName", "options": "Health" },
+            "matcher": {
+              "id": "byName",
+              "options": "Health"
+            },
             "properties": [
-              { "id": "unit", "value": "short" },
+              {
+                "id": "unit",
+                "value": "short"
+              },
               {
                 "id": "thresholds",
                 "value": {
                   "mode": "absolute",
                   "steps": [
-                    { "value": null,  "color": "#f85149" },
-                    { "value": 70,    "color": "#d29922" },
-                    { "value": 85,    "color": "#3fb950" }
+                    {
+                      "value": null,
+                      "color": "#f85149"
+                    },
+                    {
+                      "value": 70,
+                      "color": "#d29922"
+                    },
+                    {
+                      "value": 85,
+                      "color": "#3fb950"
+                    }
                   ]
                 }
               },
-              { "id": "custom.displayMode", "value": "color-text" }
+              {
+                "id": "custom.displayMode",
+                "value": "color-text"
+              }
             ]
           },
           {
-            "matcher": { "id": "byName", "options": "NPV Sell $" },
-            "properties": [{ "id": "unit", "value": "currencyUSD" }, { "id": "decimals", "value": 0 }]
+            "matcher": {
+              "id": "byName",
+              "options": "NPV Sell $"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
           },
           {
-            "matcher": { "id": "byName", "options": "NPV Keep $" },
-            "properties": [{ "id": "unit", "value": "currencyUSD" }, { "id": "decimals", "value": 0 }]
+            "matcher": {
+              "id": "byName",
+              "options": "NPV Keep $"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "currencyUSD"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
           },
           {
-            "matcher": { "id": "byName", "options": "Temp °C" },
-            "properties": [{ "id": "unit", "value": "celsius" }, { "id": "decimals", "value": 1 }]
+            "matcher": {
+              "id": "byName",
+              "options": "Temp \u00b0C"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "celsius"
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              }
+            ]
           },
           {
-            "matcher": { "id": "byName", "options": "Util %" },
-            "properties": [{ "id": "unit", "value": "percent" }, { "id": "decimals", "value": 0 }]
+            "matcher": {
+              "id": "byName",
+              "options": "Util %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Analysis"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 420
+              },
+              {
+                "id": "custom.displayMode",
+                "value": "auto"
+              },
+              {
+                "id": "custom.wrap",
+                "value": true
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "text"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Conf %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "custom.width",
+                "value": 65
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 60
+                    },
+                    {
+                      "color": "green",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "custom.displayMode",
+                "value": "color-text"
+              }
+            ]
           }
         ]
       },
       "transparent": false
     },
-
     {
       "id": 30,
       "type": "row",
-      "title": "📊 Market Intelligence",
+      "title": "\ud83d\udcca Market Intelligence",
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 29 },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 29
+      },
       "panels": [],
       "datasource": null
     },
-
     {
       "id": 31,
       "type": "gauge",
       "title": "A100 Depreciation",
       "description": "How far the A100 has fallen from its original new-market price",
-      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 30 },
-      "datasource": { "type": "postgres", "uid": "P0D1C26D7DC78F49D" },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 30
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
       "targets": [
         {
           "refId": "A",
@@ -626,7 +1356,13 @@
         }
       ],
       "options": {
-        "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" },
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
         "orientation": "auto",
         "showThresholdLabels": false,
         "showThresholdMarkers": true,
@@ -639,14 +1375,28 @@
           "decimals": 1,
           "min": 0,
           "max": 100,
-          "color": { "mode": "thresholds" },
+          "color": {
+            "mode": "thresholds"
+          },
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "value": null, "color": "#3fb950" },
-              { "value": 30,   "color": "#d29922" },
-              { "value": 50,   "color": "#e3702d" },
-              { "value": 70,   "color": "#f85149" }
+              {
+                "value": null,
+                "color": "#3fb950"
+              },
+              {
+                "value": 30,
+                "color": "#d29922"
+              },
+              {
+                "value": 50,
+                "color": "#e3702d"
+              },
+              {
+                "value": 70,
+                "color": "#f85149"
+              }
             ]
           },
           "mappings": []
@@ -655,14 +1405,21 @@
       },
       "transparent": false
     },
-
     {
       "id": 32,
       "type": "gauge",
       "title": "H100 Depreciation",
       "description": "How far the H100 has fallen from its original new-market price",
-      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 30 },
-      "datasource": { "type": "postgres", "uid": "P0D1C26D7DC78F49D" },
+      "gridPos": {
+        "h": 6,
+        "w": 6,
+        "x": 6,
+        "y": 30
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
       "targets": [
         {
           "refId": "A",
@@ -671,7 +1428,13 @@
         }
       ],
       "options": {
-        "reduceOptions": { "values": false, "calcs": ["lastNotNull"], "fields": "" },
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
         "orientation": "auto",
         "showThresholdLabels": false,
         "showThresholdMarkers": true,
@@ -684,14 +1447,28 @@
           "decimals": 1,
           "min": 0,
           "max": 100,
-          "color": { "mode": "thresholds" },
+          "color": {
+            "mode": "thresholds"
+          },
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              { "value": null, "color": "#3fb950" },
-              { "value": 30,   "color": "#d29922" },
-              { "value": 50,   "color": "#e3702d" },
-              { "value": 70,   "color": "#f85149" }
+              {
+                "value": null,
+                "color": "#3fb950"
+              },
+              {
+                "value": 30,
+                "color": "#d29922"
+              },
+              {
+                "value": 50,
+                "color": "#e3702d"
+              },
+              {
+                "value": 70,
+                "color": "#f85149"
+              }
             ]
           },
           "mappings": []
@@ -700,14 +1477,21 @@
       },
       "transparent": false
     },
-
     {
       "id": 33,
       "type": "timeseries",
       "title": "Market Price Trend (A100)",
       "description": "A100 secondary market mid-price over the last 7 days",
-      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 30 },
-      "datasource": { "type": "postgres", "uid": "P0D1C26D7DC78F49D" },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 30
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
       "targets": [
         {
           "refId": "A",
@@ -716,14 +1500,23 @@
         }
       ],
       "options": {
-        "tooltip": { "mode": "multi", "sort": "none" },
-        "legend": { "displayMode": "list", "placement": "bottom", "calcs": [] }
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "calcs": []
+        }
       },
       "fieldConfig": {
         "defaults": {
           "unit": "currencyUSD",
           "decimals": 0,
-          "color": { "mode": "palette-classic" },
+          "color": {
+            "mode": "palette-classic"
+          },
           "custom": {
             "drawStyle": "line",
             "lineInterpolation": "smooth",
@@ -734,60 +1527,140 @@
             "spanNulls": false,
             "showPoints": "auto",
             "pointSize": 5,
-            "stacking": { "mode": "none", "group": "A" },
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
             "axisPlacement": "auto",
             "axisLabel": "",
             "axisColorMode": "text",
-            "scaleDistribution": { "type": "linear" },
+            "scaleDistribution": {
+              "type": "linear"
+            },
             "axisCenteredZero": false,
-            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
-            "thresholdsStyle": { "mode": "off" }
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
           },
           "thresholds": {
             "mode": "absolute",
-            "steps": [{ "value": null, "color": "green" }]
+            "steps": [
+              {
+                "value": null,
+                "color": "green"
+              }
+            ]
           },
           "mappings": []
         },
         "overrides": [
           {
-            "matcher": { "id": "byName", "options": "A100 Mid Price" },
+            "matcher": {
+              "id": "byName",
+              "options": "A100 Mid Price"
+            },
             "properties": [
-              { "id": "color", "value": { "mode": "fixed", "fixedColor": "#3fb950" } },
-              { "id": "custom.lineWidth", "value": 2 }
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#3fb950"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              }
             ]
           },
           {
-            "matcher": { "id": "byName", "options": "A100 Low" },
+            "matcher": {
+              "id": "byName",
+              "options": "A100 Low"
+            },
             "properties": [
-              { "id": "color", "value": { "mode": "fixed", "fixedColor": "#484f58" } },
-              { "id": "custom.lineWidth", "value": 1 },
-              { "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [4, 4] } }
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#484f58"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "dash",
+                  "dash": [
+                    4,
+                    4
+                  ]
+                }
+              }
             ]
           },
           {
-            "matcher": { "id": "byName", "options": "A100 High" },
+            "matcher": {
+              "id": "byName",
+              "options": "A100 High"
+            },
             "properties": [
-              { "id": "color", "value": { "mode": "fixed", "fixedColor": "#484f58" } },
-              { "id": "custom.lineWidth", "value": 1 },
-              { "id": "custom.lineStyle", "value": { "fill": "dash", "dash": [4, 4] } }
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#484f58"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 1
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "dash",
+                  "dash": [
+                    4,
+                    4
+                  ]
+                }
+              }
             ]
           }
         ]
       },
       "transparent": false
     }
-
   ],
   "refresh": "5m",
   "schemaVersion": 38,
   "style": "dark",
-  "tags": ["gpu", "economics", "secondary-market"],
+  "tags": [
+    "gpu",
+    "economics",
+    "secondary-market"
+  ],
   "templating": {
     "list": [
       {
-        "current": { "selected": true, "text": "All", "value": "$__all" },
-        "datasource": { "type": "postgres", "uid": "P0D1C26D7DC78F49D" },
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "postgres",
+          "uid": "P0D1C26D7DC78F49D"
+        },
         "definition": "SELECT DISTINCT datacenter FROM gpu_datacenter_mapping ORDER BY datacenter",
         "hide": 0,
         "includeAll": true,
@@ -804,7 +1677,10 @@
       }
     ]
   },
-  "time": { "from": "now-24h", "to": "now" },
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
   "timepicker": {},
   "timezone": "browser",
   "title": "GPU Fleet Economics \u00b7 Secondary Market",
