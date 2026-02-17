@@ -64,16 +64,45 @@ class LifecycleDecision(str, Enum):
 
 class EconomicDecisionEngine:
     """NPV-based lifecycle decision engine for GPU fleet."""
-    
-    # Market prices (USD) - H100 80GB as reference
-    RESIDUAL_VALUE = {
-        'excellent': 32000,   # 90-100 health score
-        'good': 28000,        # 80-89
-        'fair': 22000,        # 70-79
-        'degraded': 15000,    # 60-69
-        'poor': 8000,         # 50-59
-        'critical': 2000      # < 50
+
+    # Model-specific secondary market residual values (USD).
+    # Reflects current broker / secondary market pricing for used GPU hardware.
+    # A100 SXM4-80GB trades at roughly 30-40% of H100 SXM5-80GB on secondary markets (Feb 2026).
+    RESIDUAL_VALUE_BY_MODEL = {
+        'NVIDIA A100-SXM4-80GB': {
+            'excellent': 13500,  # 90-100 health — near-new A100, top-tier secondary
+            'good':      10500,  # 80-89
+            'fair':       8500,  # 70-79
+            'degraded':   5700,  # 60-69
+            'poor':       3000,  # 50-59
+            'critical':    800,  # < 50
+        },
+        'NVIDIA H100-SXM5-80GB': {
+            'excellent': 32000,  # 90-100 health
+            'good':      28000,  # 80-89
+            'fair':      22000,  # 70-79
+            'degraded':  15000,  # 60-69
+            'poor':       8000,  # 50-59
+            'critical':   2000,  # < 50
+        },
     }
+    # Fallback for unknown models — conservative mid-range values
+    RESIDUAL_VALUE_DEFAULT = {
+        'excellent': 20000,
+        'good':      16000,
+        'fair':      12000,
+        'degraded':   8000,
+        'poor':       4000,
+        'critical':   1000,
+    }
+
+    # Keep for backward-compat references elsewhere in the codebase
+    RESIDUAL_VALUE = RESIDUAL_VALUE_BY_MODEL['NVIDIA H100-SXM5-80GB']
+
+    # Maximum failure probability used in NPV penalty — cap at 60%.
+    # A 60% 90-day failure probability is already a decisive sell signal;
+    # capping prevents an un-warmed ML model from producing absurd penalties.
+    FAILURE_PROB_CAP = 0.60
     
     # Operating costs (monthly)
     POWER_COST_PER_KWH = 0.12  # $0.12/kWh
@@ -169,90 +198,98 @@ class EconomicDecisionEngine:
             'utilization': util['avg_utilization'] if util and util['avg_utilization'] else 0.5
         }
     
+    def _residual_values(self, model: str) -> dict:
+        """Return the correct residual value table for the given GPU model."""
+        return self.RESIDUAL_VALUE_BY_MODEL.get(model, self.RESIDUAL_VALUE_DEFAULT)
+
     def calculate_npv_keep(
         self,
         health_score: float,
         failure_prob_90d: float,
         utilization: float,
-        months: int = 12
+        months: int = 12,
+        model: str = '',
     ) -> float:
         """
         Calculate NPV of keeping the GPU for specified months.
-        
+
         NPV(Keep) = Revenue - Costs - Failure_Risk
         """
         monthly_discount = (1 + self.ANNUAL_DISCOUNT_RATE) ** (1/12) - 1
-        
+        residuals = self._residual_values(model)
+
+        # Cap failure probability — an un-warmed predictor can output 0.99;
+        # 60% is already a decisive sell signal and prevents absurd NPV penalties.
+        failure_prob_capped = min(failure_prob_90d, self.FAILURE_PROB_CAP)
+
         npv = 0.0
-        
+
         for month in range(months):
-            # Monthly revenue (hours * rate * utilization)
-            hours_per_month = 730  # Average
+            # Monthly revenue (hours * rate * utilization fraction)
+            hours_per_month = 730
             monthly_revenue = hours_per_month * self.REVENUE_PER_GPU_HOUR_FULL * (utilization / 100)
-            
+
             # Monthly costs
             power_cost = (self.POWER_WATTS / 1000) * hours_per_month * self.POWER_COST_PER_KWH * self.COOLING_PUE
             total_cost = power_cost + self.MAINTENANCE_COST
-            
-            # Net cash flow
+
+            # Net cash flow before health/risk adjustments
             net_cash_flow = monthly_revenue - total_cost
-            
+
             # Discount factor
             discount_factor = 1 / ((1 + monthly_discount) ** month)
-            
-            # Adjust for health degradation (assume linear decline)
+
+            # Adjust for health degradation (linear decline assumption)
             health_factor = max(0.2, (health_score - month * 2) / 100)
-            
-            # Failure risk adjustment (probability of total loss)
-            failure_risk = failure_prob_90d * self.RESIDUAL_VALUE.get('fair', 20000)
-            
+
+            # Failure risk: expected loss from GPU failure, using model-specific value
+            failure_risk = failure_prob_capped * residuals.get('fair', 12000)
+
             npv += (net_cash_flow * health_factor - failure_risk / months) * discount_factor
-        
+
         return npv
-    
-    def calculate_npv_sell(self, health_grade: str) -> float:
+
+    def calculate_npv_sell(self, health_grade: str, model: str = '') -> float:
         """
-        Calculate NPV of selling GPU now.
-        
+        Calculate NPV of selling GPU now on the secondary market.
+
         NPV(Sell) = Market_Value - Transaction_Costs
+        Uses model-specific secondary market pricing.
         """
-        market_value = self.RESIDUAL_VALUE.get(health_grade, 10000)
-        transaction_costs = market_value * 0.05  # 5% transaction fee
-        
+        residuals = self._residual_values(model)
+        market_value = residuals.get(health_grade, residuals.get('fair', 10000))
+        transaction_costs = market_value * 0.05  # 5% broker/transaction fee
         return market_value - transaction_costs
-    
+
     def calculate_npv_repurpose(
         self,
         health_score: float,
         failure_prob_90d: float,
-        months: int = 12
+        months: int = 12,
+        model: str = '',
     ) -> float:
         """
         Calculate NPV of repurposing for lower-tier workloads (inference).
-        
+
         NPV(Repurpose) = Lower_Revenue - Costs - Failure_Risk
         """
         monthly_discount = (1 + self.ANNUAL_DISCOUNT_RATE) ** (1/12) - 1
-        
+        residuals = self._residual_values(model)
+        failure_prob_capped = min(failure_prob_90d, self.FAILURE_PROB_CAP)
+
         npv = 0.0
-        
+
         for month in range(months):
-            # Inference workloads (lower revenue but stable)
             hours_per_month = 730
-            monthly_revenue = hours_per_month * self.REVENUE_PER_GPU_HOUR_INFERENCE * 0.7  # 70% utilization
-            
-            # Costs
+            monthly_revenue = hours_per_month * self.REVENUE_PER_GPU_HOUR_INFERENCE * 0.7
             power_cost = (self.POWER_WATTS / 1000) * hours_per_month * self.POWER_COST_PER_KWH * self.COOLING_PUE
-            total_cost = power_cost + self.MAINTENANCE_COST * 0.8  # Lower maintenance
-            
+            total_cost = power_cost + self.MAINTENANCE_COST * 0.8
             net_cash_flow = monthly_revenue - total_cost
-            
             discount_factor = 1 / ((1 + monthly_discount) ** month)
-            
             health_factor = max(0.3, (health_score - month) / 100)
-            
-            npv += net_cash_flow * health_factor * discount_factor
-        
+            failure_risk = failure_prob_capped * residuals.get('fair', 12000)
+            npv += (net_cash_flow * health_factor - failure_risk / months) * discount_factor
+
         return npv
     
     def analyze_gpu(self, gpu_uuid: str) -> dict:
@@ -275,14 +312,18 @@ class EconomicDecisionEngine:
         failure_prob_30d = context['prediction'].get('failure_prob_30d', 0.1) if context['prediction'] else 0.1
         failure_prob_90d = context['prediction'].get('failure_prob_90d', 0.2) if context['prediction'] else 0.2
         utilization = context['utilization']
-        
-        # Calculate NPVs for each option
-        npv_keep = self.calculate_npv_keep(health_score, failure_prob_90d, utilization, months=12)
-        npv_sell = self.calculate_npv_sell(health_grade)
-        npv_repurpose = self.calculate_npv_repurpose(health_score, failure_prob_90d, months=12)
-        
-        # Salvage value (decommission)
-        salvage_value = self.RESIDUAL_VALUE.get(health_grade, 5000) * 0.1  # 10% of market value
+        model = context['asset'].get('model', '') if context['asset'] else ''
+
+        logger.info(f"  Model: {model}, Health: {health_score:.1f} ({health_grade}), "
+                    f"Util: {utilization:.1f}%, FailProb90d: {failure_prob_90d:.3f}")
+
+        # Calculate NPVs for each option (all model-aware)
+        npv_keep = self.calculate_npv_keep(health_score, failure_prob_90d, utilization, months=12, model=model)
+        npv_sell = self.calculate_npv_sell(health_grade, model=model)
+        npv_repurpose = self.calculate_npv_repurpose(health_score, failure_prob_90d, months=12, model=model)
+
+        # Salvage value (decommission) — 10% of model-specific market value
+        salvage_value = self._residual_values(model).get(health_grade, 5000) * 0.1
         
         # Choose best decision
         options = {
