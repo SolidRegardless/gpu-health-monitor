@@ -33,11 +33,13 @@ import os
 from datetime import datetime, timedelta
 from typing import List, Optional, Dict
 from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import logging
+import anthropic
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -55,6 +57,14 @@ app = FastAPI(
     title="GPU Health Monitor API",
     description="API for querying GPU metrics and health scores",
     version="1.0.0"
+)
+
+# Allow the standalone HTML dashboard (any localhost port) to call the API
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["GET"],
+    allow_headers=["*"],
 )
 
 # Database connection pool
@@ -363,6 +373,120 @@ def get_alerts():
     except Exception as e:
         logger.error(f"Error getting alerts: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/v1/market-intelligence")
+def get_market_intelligence():
+    """
+    Generate AI-powered secondary market intelligence commentary.
+    Pulls current GPU prices, fleet health and NPV decisions from the DB,
+    then asks Claude to write fresh market analysis as HTML paragraphs.
+    Streams the response so the UI can render text progressively.
+    """
+    api_key = os.getenv("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY not configured")
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # ── Current secondary market prices ───────────────────────────────────
+        cursor.execute("""
+            SELECT model, condition, price_low_usd, price_high_usd, price_mid_usd,
+                   original_cost_usd, source,
+                   TO_CHAR(fetched_at, 'DD Mon YYYY HH24:MI UTC') as fetched_at
+            FROM v_latest_market_prices
+            WHERE condition = 'used_good'
+            ORDER BY model
+        """)
+        prices = [dict(r) for r in cursor.fetchall()]
+
+        # ── Fleet decision summary ────────────────────────────────────────────
+        cursor.execute("""
+            SELECT decision, COUNT(*) as count,
+                   ROUND(AVG(health_score)::numeric, 1) as avg_health,
+                   ROUND(AVG(npv_sell)::numeric, 0)  as avg_npv_sell,
+                   ROUND(AVG(npv_keep)::numeric, 0)  as avg_npv_keep
+            FROM v_latest_economic_decisions
+            GROUP BY decision
+            ORDER BY count DESC
+        """)
+        decisions = [dict(r) for r in cursor.fetchall()]
+
+        # ── Per-model breakdown ───────────────────────────────────────────────
+        cursor.execute("""
+            SELECT a.model,
+                   COUNT(*) as total,
+                   SUM(CASE WHEN d.decision = 'sell'      THEN 1 ELSE 0 END) as sell_count,
+                   SUM(CASE WHEN d.decision = 'keep'      THEN 1 ELSE 0 END) as keep_count,
+                   SUM(CASE WHEN d.decision = 'repurpose' THEN 1 ELSE 0 END) as repurpose_count,
+                   ROUND(AVG(h.overall_score)::numeric, 1)  as avg_health
+            FROM gpu_assets a
+            JOIN v_latest_economic_decisions d ON a.gpu_uuid = d.gpu_uuid
+            JOIN gpu_health_scores h ON a.gpu_uuid = h.gpu_uuid
+            WHERE h.time = (SELECT MAX(h2.time) FROM gpu_health_scores h2 WHERE h2.gpu_uuid = h.gpu_uuid)
+            GROUP BY a.model
+            ORDER BY a.model
+        """)
+        model_breakdown = [dict(r) for r in cursor.fetchall()]
+
+    except Exception as e:
+        logger.error(f"DB error in market-intelligence: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+    # ── Build prompt ──────────────────────────────────────────────────────────
+    price_lines = "\n".join(
+        f"  - {p['model']}: secondary market ${p['price_low_usd']:,.0f}–${p['price_high_usd']:,.0f} "
+        f"(mid ${p['price_mid_usd']:,.0f}), original new price ${p['original_cost_usd']:,.0f}, "
+        f"data as of {p['fetched_at']} (source: {p['source']})"
+        for p in prices
+    ) or "  No live pricing data available yet."
+
+    decision_lines = "\n".join(
+        f"  - {d['decision'].upper()}: {d['count']} GPU(s), "
+        f"avg health {d['avg_health']}/100, avg NPV sell ${d['avg_npv_sell']:,.0f}, avg NPV keep ${d['avg_npv_keep']:,.0f}"
+        for d in decisions
+    ) or "  No decision data yet."
+
+    model_lines = "\n".join(
+        f"  - {m['model']}: {m['total']} units, avg health {m['avg_health']}/100 "
+        f"[KEEP: {m['keep_count']} | SELL: {m['sell_count']} | REPURPOSE: {m['repurpose_count']}]"
+        for m in model_breakdown
+    ) or "  No model breakdown available."
+
+    prompt = f"""You are a GPU fleet economics analyst writing a brief market intelligence summary for an operational dashboard.
+
+Current secondary market GPU pricing (live data):
+{price_lines}
+
+Current fleet decision summary:
+{decision_lines}
+
+Fleet breakdown by model:
+{model_lines}
+
+Write exactly 3 short paragraphs of market intelligence commentary in plain HTML (use only <p> and <strong> tags).
+Each paragraph should cover one of these angles:
+1. What the current secondary market prices tell us about supply/demand dynamics — reference the actual prices above and any relevant macro trends (Blackwell ramp, hyperscaler offloading, etc.)
+2. What the fleet health and NPV data tells us — interpret the KEEP/SELL/REPURPOSE split, reference the average health scores, and explain what this means for the operator
+3. A forward-looking view: given current trends, what should the operator watch for over the next 3–6 months to maximise residual value recovery
+
+Be concise, factual, and commercially sharp. No bullet points. No headings. No markdown. Just 3 <p> tags.
+Reference the actual numbers from the data above where relevant."""
+
+    # ── Stream Claude's response ──────────────────────────────────────────────
+    def stream_claude():
+        client = anthropic.Anthropic(api_key=api_key)
+        with client.messages.stream(
+            model="claude-3-5-haiku-20241022",
+            max_tokens=600,
+            messages=[{"role": "user", "content": prompt}],
+        ) as stream:
+            for text in stream.text_stream:
+                yield text
+
+    return StreamingResponse(stream_claude(), media_type="text/html; charset=utf-8")
 
 
 if __name__ == "__main__":

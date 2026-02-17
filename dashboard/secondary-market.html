@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GPU Fleet Economics · Secondary Market Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #0d1117;
+      --surface:      #161b22;
+      --surface2:     #21262d;
+      --border:       #30363d;
+      --text:         #e6edf3;
+      --text-muted:   #8b949e;
+      --text-dim:     #484f58;
+      --green:        #3fb950;
+      --blue:         #58a6ff;
+      --purple:       #bc8cff;
+      --amber:        #d29922;
+      --red:          #f85149;
+      --a100-color:   #3fb950;
+      --a100-dim:     rgba(63,185,80,0.12);
+      --h100-color:   #bc8cff;
+      --h100-dim:     rgba(188,140,255,0.12);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 14px;
+    }
+
+    /* ── Header ─────────────────────────────────────── */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .logo {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, #58a6ff, #bc8cff);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .header h1 { font-size: 15px; font-weight: 600; }
+    .header h1 span { color: var(--text-muted); font-weight: 400; }
+    .header-controls { display: flex; align-items: center; gap: 12px; }
+    .dc-label { font-size: 12px; color: var(--text-muted); }
+    .dc-selector {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 28px 6px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      outline: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='%238b949e' d='M5 7L0 2h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+    }
+    .dc-selector:hover { border-color: var(--blue); }
+    .live-badge {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; color: var(--text-muted);
+      background: var(--surface2);
+      padding: 5px 10px; border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+    .live-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+    /* ── Market Pulse ────────────────────────────────── */
+    .market-pulse {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 9px 24px;
+      display: flex; align-items: center; gap: 28px;
+      overflow-x: auto;
+    }
+    .pulse-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.6px; white-space: nowrap; }
+    .pulse-items { display: flex; gap: 28px; }
+    .pulse-item { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+    .pulse-dot { width: 7px; height: 7px; border-radius: 50%; }
+    .pulse-tag { font-size: 11px; color: var(--text-muted); }
+    .pulse-val { font-size: 12px; font-weight: 700; }
+    .pulse-chg { font-size: 11px; }
+    .down { color: var(--red); }
+    .up   { color: var(--green); }
+    .neu  { color: var(--text-muted); }
+
+    /* ── Main ────────────────────────────────────────── */
+    .main { padding: 20px 24px; max-width: 1600px; margin: 0 auto; }
+
+    /* ── Panels ──────────────────────────────────────── */
+    .panels { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+    @media (max-width: 1100px) { .panels { grid-template-columns: 1fr; } }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 13px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .panel-title { display: flex; align-items: center; gap: 10px; }
+    .model-badge {
+      font-size: 11px; font-weight: 700;
+      padding: 3px 8px; border-radius: 4px; letter-spacing: 0.6px;
+    }
+    .model-badge.a100 { background: var(--a100-dim); color: var(--a100-color); border: 1px solid rgba(63,185,80,0.3); }
+    .model-badge.h100 { background: var(--h100-dim); color: var(--h100-color); border: 1px solid rgba(188,140,255,0.3); }
+    .panel-title h2 { font-size: 13px; font-weight: 600; }
+    .panel-stats { display: flex; gap: 20px; }
+    .panel-stat { text-align: right; }
+    .panel-stat-label { font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.4px; }
+    .panel-stat-value { font-size: 13px; font-weight: 700; }
+
+    .panel-body { display: grid; grid-template-columns: 1fr 220px; min-height: 300px; }
+
+    .chart-area { padding: 16px; border-right: 1px solid var(--border); }
+    .chart-container { position: relative; width: 100%; height: 250px; }
+
+    /* ── Legend ──────────────────────────────────────── */
+    .legend {
+      display: flex; align-items: center; gap: 16px;
+      padding: 8px 16px;
+      border-top: 1px solid var(--border);
+    }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--text-muted); }
+    .legend-swatch { width: 10px; height: 10px; border-radius: 2px; }
+
+    /* ── GPU List ─────────────────────────────────────── */
+    .gpu-list-header {
+      padding: 9px 14px 7px;
+      font-size: 10px; color: var(--text-dim);
+      text-transform: uppercase; letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      position: sticky; top: 0;
+    }
+    .gpu-list { overflow-y: auto; max-height: 280px; }
+
+    .gpu-item {
+      padding: 9px 14px;
+      border-bottom: 1px solid rgba(48,54,61,0.5);
+      cursor: pointer;
+      transition: background 0.12s;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    }
+    .gpu-item:hover { background: var(--surface2); }
+    .gpu-item.selected {
+      background: rgba(88,166,255,0.07);
+      border-left: 2px solid var(--blue);
+      padding-left: 12px;
+    }
+    .gpu-item-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .health-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .health-dot.excellent { background: #3fb950; }
+    .health-dot.good      { background: #58a6ff; }
+    .health-dot.fair      { background: #d29922; }
+    .health-dot.degraded  { background: #f85149; }
+    .health-dot.poor      { background: #6e7681; }
+    .health-dot.critical  { background: #6e7681; }
+
+    .gpu-id   { font-size: 11px; font-weight: 600; font-family: 'SF Mono','Cascadia Code',monospace; }
+    .gpu-meta { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+
+    .decision-badge {
+      font-size: 9px; font-weight: 700;
+      padding: 2px 6px; border-radius: 3px; letter-spacing: 0.5px; flex-shrink: 0;
+    }
+    .decision-badge.KEEP      { background: rgba(31,111,235,0.18); color: #58a6ff; border: 1px solid rgba(31,111,235,0.35); }
+    .decision-badge.SELL      { background: rgba(248,81,73,0.15);  color: #f85149; border: 1px solid rgba(248,81,73,0.35); }
+    .decision-badge.REPURPOSE { background: rgba(188,140,255,0.15); color: #bc8cff; border: 1px solid rgba(188,140,255,0.35); }
+
+    .clear-btn {
+      display: none; margin: 8px 14px;
+      padding: 5px 10px; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 4px;
+      color: var(--text-muted); font-size: 11px; cursor: pointer; width: calc(100% - 28px);
+    }
+    .clear-btn:hover { color: var(--text); border-color: var(--blue); }
+    .clear-btn.visible { display: block; }
+
+    /* ── Detail Panel ─────────────────────────────────── */
+    .detail-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px; margin-bottom: 20px; overflow: hidden; display: none;
+    }
+    .detail-panel.visible { display: block; }
+
+    .detail-header {
+      padding: 13px 18px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .detail-title-row { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; }
+    .detail-uuid { font-size: 11px; color: var(--text-dim); font-family: monospace; }
+
+    .detail-body {
+      padding: 18px 20px;
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+    }
+    @media (max-width: 900px) { .detail-body { grid-template-columns: 1fr 1fr; } }
+
+    .detail-card {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 14px 16px;
+    }
+    .detail-card.sell-signal { border-color: rgba(248,81,73,0.4); }
+    .detail-card-label {
+      font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
+    }
+    .detail-card-value { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+    .detail-card-sub   { font-size: 11px; color: var(--text-muted); margin-top: 4px; line-height: 1.4; }
+    .detail-card-value.red   { color: var(--red); }
+    .detail-card-value.green { color: var(--green); }
+    .detail-card-value.blue  { color: var(--blue); }
+    .detail-card-value.amber { color: var(--amber); }
+
+    .bar-track { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; margin-top: 8px; }
+    .bar-fill  { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+    .bar-fill.green { background: var(--green); }
+    .bar-fill.amber { background: var(--amber); }
+    .bar-fill.red   { background: var(--red); }
+
+    .detail-reasoning {
+      grid-column: 1 / -1;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 14px 16px;
+    }
+    .detail-reasoning-label {
+      font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
+    }
+    .detail-reasoning-text { font-size: 13px; color: var(--text); line-height: 1.7; }
+
+    /* ── Market Context ───────────────────────────────── */
+    .market-context {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 18px 20px; margin-bottom: 24px;
+    }
+    .market-context h3 {
+      font-size: 11px; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px;
+    }
+    .market-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    @media (max-width: 768px) { .market-grid { grid-template-columns: 1fr; } }
+
+    .market-card {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 7px; padding: 13px 15px;
+    }
+    .market-card-title { font-size: 12px; font-weight: 600; color: var(--blue); margin-bottom: 6px; }
+    .market-card-text  { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+
+    /* ── Scrollbar ────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .mi-content { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .mi-content p {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 7px; padding: 13px 15px;
+      font-size: 12px; color: var(--text-muted); line-height: 1.6; margin: 0;
+    }
+    .mi-content p strong { color: var(--text); }
+    .mi-error { font-size: 12px; color: var(--red); padding: 8px 0; }
+    @media (max-width: 900px) { .mi-content { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════ HEADER -->
+<header class="header">
+  <div class="header-left">
+    <div class="logo">⬛</div>
+    <h1>GPU Fleet Economics <span>· Secondary Market Dashboard</span></h1>
+  </div>
+  <div class="header-controls">
+    <span class="dc-label">Data Centre</span>
+    <select class="dc-selector" id="dcSelector" onchange="onDCChange()">
+      <option value="all">All Data Centres</option>
+      <option value="DC-EAST-01">DC-EAST-01</option>
+      <option value="UK-SOUTH-01">UK-SOUTH-01</option>
+    </select>
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      <span id="clock">--:--:--</span>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════ MARKET PULSE -->
+<div class="market-pulse">
+  <span class="pulse-label">Market</span>
+  <div class="pulse-items">
+    <div class="pulse-item">
+      <div class="pulse-dot" style="background:#3fb950"></div>
+      <span class="pulse-tag">A100 80GB (secondary avg)</span>
+      <span class="pulse-val">$9,200</span>
+      <span class="pulse-chg down">▼ 18% MoM</span>
+    </div>
+    <div class="pulse-item">
+      <div class="pulse-dot" style="background:#bc8cff"></div>
+      <span class="pulse-tag">H100 80GB (secondary avg)</span>
+      <span class="pulse-val">$22,800</span>
+      <span class="pulse-chg down">▼ 8% MoM</span>
+    </div>
+    <div class="pulse-item">
+      <div class="pulse-dot" style="background:#58a6ff"></div>
+      <span class="pulse-tag">Blackwell B200 (new)</span>
+      <span class="pulse-val">$60–80k+</span>
+      <span class="pulse-chg up">▲ Ramp driving H100 secondary supply ↑</span>
+    </div>
+    <div class="pulse-item">
+      <div class="pulse-dot" style="background:#d29922"></div>
+      <span class="pulse-tag">Cloud H100/hr</span>
+      <span class="pulse-val">$2.85</span>
+      <span class="pulse-chg down">▼ 6% QoQ</span>
+    </div>
+    <div class="pulse-item">
+      <div class="pulse-dot" style="background:#8b949e"></div>
+      <span class="pulse-tag">Broker fee (typical)</span>
+      <span class="pulse-val">5%</span>
+      <span class="pulse-chg neu">modelled</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ MAIN -->
+<main class="main">
+
+  <!-- ── GPU Detail Card (appears on selection) ─────── -->
+  <div class="detail-panel" id="detailPanel">
+    <div class="detail-header">
+      <div class="detail-title-row">
+        <span id="dModelBadge" class="model-badge"></span>
+        <span id="dTitle"></span>
+        <span id="dDecisionBadge" class="decision-badge"></span>
+      </div>
+      <div class="detail-uuid" id="dUUID"></div>
+    </div>
+    <div class="detail-body">
+      <div class="detail-card">
+        <div class="detail-card-label">Original Purchase Cost</div>
+        <div class="detail-card-value" id="dOrigCost"></div>
+        <div class="detail-card-sub" id="dOrigSub"></div>
+      </div>
+      <div class="detail-card">
+        <div class="detail-card-label">Secondary Market (NPV Sell)</div>
+        <div class="detail-card-value green" id="dNpvSell"></div>
+        <div class="detail-card-sub" id="dSellSub"></div>
+        <div class="bar-track"><div class="bar-fill" id="dSellBar"></div></div>
+      </div>
+      <div class="detail-card">
+        <div class="detail-card-label">Operational Value (NPV Keep)</div>
+        <div class="detail-card-value blue" id="dNpvKeep"></div>
+        <div class="detail-card-sub" id="dKeepSub"></div>
+        <div class="bar-track"><div class="bar-fill" id="dKeepBar"></div></div>
+      </div>
+      <div class="detail-card">
+        <div class="detail-card-label">Asset Health</div>
+        <div class="detail-card-value" id="dHealth"></div>
+        <div class="detail-card-sub" id="dHealthSub"></div>
+      </div>
+      <div class="detail-reasoning">
+        <div class="detail-reasoning-label">Economic Analysis &amp; Recommendation</div>
+        <div class="detail-reasoning-text" id="dReasoning"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Two GPU Model Panels ────────────────────────── -->
+  <div class="panels">
+
+    <!-- A100 Panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <div class="model-badge a100">A100</div>
+          <h2>NVIDIA A100 SXM4-80GB</h2>
+        </div>
+        <div class="panel-stats" id="a100Stats"></div>
+      </div>
+      <div class="panel-body">
+        <div class="chart-area">
+          <div class="chart-container"><canvas id="a100Chart"></canvas></div>
+        </div>
+        <div style="display:flex;flex-direction:column;overflow:hidden;">
+          <div class="gpu-list-header">GPU Units</div>
+          <div class="gpu-list" id="a100List"></div>
+          <button class="clear-btn" id="a100ClearBtn" onclick="clearSelection('a100')">✕ Clear selection</button>
+        </div>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-swatch" style="background:#484f58"></div>Original Cost</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#238636"></div>Secondary Market (NPV Sell)</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#1f6feb"></div>Operational Value (NPV Keep)</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#f85149;opacity:.7"></div>NPV Keep when SELL flagged</div>
+      </div>
+    </div>
+
+    <!-- H100 Panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <div class="model-badge h100">H100</div>
+          <h2>NVIDIA H100 SXM5-80GB</h2>
+        </div>
+        <div class="panel-stats" id="h100Stats"></div>
+      </div>
+      <div class="panel-body">
+        <div class="chart-area">
+          <div class="chart-container"><canvas id="h100Chart"></canvas></div>
+        </div>
+        <div style="display:flex;flex-direction:column;overflow:hidden;">
+          <div class="gpu-list-header">GPU Units</div>
+          <div class="gpu-list" id="h100List"></div>
+          <button class="clear-btn" id="h100ClearBtn" onclick="clearSelection('h100')">✕ Clear selection</button>
+        </div>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-swatch" style="background:#484f58"></div>Original Cost</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#238636"></div>Secondary Market (NPV Sell)</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#1f6feb"></div>Operational Value (NPV Keep)</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#f85149;opacity:.7"></div>NPV Keep when SELL flagged</div>
+      </div>
+    </div>
+
+  </div><!-- /panels -->
+
+  <!-- ── Secondary Market Intelligence (AI-generated on load) ──────── -->
+  <div class="market-context" id="marketIntelBox">
+    <h3 style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <span>📊 Secondary Market Intelligence</span>
+      <span id="miMeta" style="font-size:10px;color:var(--text-dim);font-weight:400;letter-spacing:0;text-transform:none;"></span>
+    </h3>
+    <div id="marketIntelBody">
+      <div id="miSkeleton" style="display:flex;align-items:center;gap:12px;padding:12px 0;">
+        <div id="miSpinner" style="width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin 0.8s linear infinite;flex-shrink:0;"></div>
+        <span style="font-size:12px;color:var(--text-muted);">Generating market intelligence from live fleet data…</span>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ════════════════════════════════════════════════════════════════
+// GPU DATA  —  derived from gpu-health-monitor mock DCGM profiles
+// Original cost refs: A100 SXM4-80GB ~$15k, H100 SXM5-80GB ~$32k
+// Residual values from economic_engine.py RESIDUAL_VALUE table
+// (A100 scaled ~50-60% relative to H100 reflecting current market)
+// ════════════════════════════════════════════════════════════════
+const ALL_DATA = {
+  'DC-EAST-01': {
+    A100: [
+      {
+        id: 'A100-E01', uuid: 'GPU-abc123def456', profile: 'Healthy',
+        datacenter: 'DC-EAST-01', age_months: 6,
+        health_grade: 'good', health_score: 84,
+        original_cost: 15000,
+        npv_sell: Math.round(11000 * 0.95),   // $10,450
+        npv_keep: 18800,
+        utilization: 0.82, failure_prob_90d: 0.04,
+        decision: 'KEEP',
+      },
+      {
+        id: 'A100-E02', uuid: 'GPU-def456abc789', profile: 'High Temp',
+        datacenter: 'DC-EAST-01', age_months: 18,
+        health_grade: 'fair', health_score: 74,
+        original_cost: 15000,
+        npv_sell: Math.round(9000 * 0.95),    // $8,550
+        npv_keep: 13400,
+        utilization: 0.71, failure_prob_90d: 0.09,
+        decision: 'KEEP',
+      },
+      {
+        id: 'A100-E03', uuid: 'GPU-mno345pqr678', profile: 'Aging',
+        datacenter: 'DC-EAST-01', age_months: 36,
+        health_grade: 'degraded', health_score: 63,
+        original_cost: 15000,
+        npv_sell: Math.round(6000 * 0.95),    // $5,700  — SELL
+        npv_keep: 4200,
+        utilization: 0.58, failure_prob_90d: 0.22,
+        decision: 'SELL',
+      },
+    ],
+    H100: [
+      {
+        id: 'H100-E01', uuid: 'GPU-ghi789jkl012', profile: 'Power Hungry',
+        datacenter: 'DC-EAST-01', age_months: 3,
+        health_grade: 'excellent', health_score: 96,
+        original_cost: 32000,
+        npv_sell: Math.round(32000 * 0.95),   // $30,400
+        npv_keep: 34200,
+        utilization: 0.91, failure_prob_90d: 0.01,
+        decision: 'KEEP',
+      },
+      {
+        id: 'H100-E02', uuid: 'GPU-stu901vwx234', profile: 'Excellent',
+        datacenter: 'DC-EAST-01', age_months: 1,
+        health_grade: 'excellent', health_score: 99,
+        original_cost: 32000,
+        npv_sell: Math.round(32000 * 0.95),   // $30,400
+        npv_keep: 36100,
+        utilization: 0.95, failure_prob_90d: 0.005,
+        decision: 'KEEP',
+      },
+    ],
+  },
+  'UK-SOUTH-01': {
+    A100: [
+      {
+        id: 'A100-U01', uuid: 'GPU-uk2bbb222ccc', profile: 'Power Efficient',
+        datacenter: 'UK-SOUTH-01', age_months: 4,
+        health_grade: 'excellent', health_score: 92,
+        original_cost: 15000,
+        npv_sell: Math.round(13500 * 0.95),   // $12,825
+        npv_keep: 20400,
+        utilization: 0.88, failure_prob_90d: 0.02,
+        decision: 'KEEP',
+      },
+      {
+        id: 'A100-U02', uuid: 'GPU-uk4ddd444eee', profile: 'Burst Load',
+        datacenter: 'UK-SOUTH-01', age_months: 22,
+        health_grade: 'fair', health_score: 71,
+        original_cost: 15000,
+        npv_sell: Math.round(8500 * 0.95),    // $8,075
+        npv_keep: 12600,
+        utilization: 0.65, failure_prob_90d: 0.11,
+        decision: 'KEEP',
+      },
+    ],
+    H100: [
+      {
+        id: 'H100-U01', uuid: 'GPU-uk1aaa111bbb', profile: 'Unstable Temp',
+        datacenter: 'UK-SOUTH-01', age_months: 8,
+        health_grade: 'good', health_score: 86,
+        original_cost: 32000,
+        npv_sell: Math.round(28000 * 0.95),   // $26,600
+        npv_keep: 29100,
+        utilization: 0.83, failure_prob_90d: 0.06,
+        decision: 'KEEP',
+      },
+      {
+        id: 'H100-U02', uuid: 'GPU-uk3ccc333ddd', profile: 'Memory Stress',
+        datacenter: 'UK-SOUTH-01', age_months: 14,
+        health_grade: 'fair', health_score: 76,
+        original_cost: 32000,
+        npv_sell: Math.round(22000 * 0.95),   // $20,900
+        npv_keep: 24800,
+        utilization: 0.74, failure_prob_90d: 0.13,
+        decision: 'KEEP',
+      },
+      {
+        id: 'H100-U03', uuid: 'GPU-uk5eee555fff', profile: 'Early Warning',
+        datacenter: 'UK-SOUTH-01', age_months: 28,
+        health_grade: 'degraded', health_score: 62,
+        original_cost: 32000,
+        npv_sell: Math.round(15000 * 0.95),   // $14,250  — SELL
+        npv_keep: 11800,
+        utilization: 0.61, failure_prob_90d: 0.25,
+        decision: 'SELL',
+      },
+    ],
+  },
+};
+
+// ════════════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════════════
+let currentDC    = 'all';
+let selected     = { a100: null, h100: null };
+let charts       = { a100: null, h100: null };
+
+// ════════════════════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════════════════════
+function fmt(n) { return '$' + Number(n).toLocaleString('en-US'); }
+function pct(n) { return (n * 100).toFixed(0) + '%'; }
+
+function dcPrefix(dc) {
+  if (dc === 'DC-EAST-01')  return 'EAST';
+  if (dc === 'UK-SOUTH-01') return 'UKS';
+  return dc;
+}
+
+function getGPUs(modelKey) {
+  const model = modelKey === 'a100' ? 'A100' : 'H100';
+  if (currentDC === 'all') {
+    const combined = [];
+    for (const dc of Object.keys(ALL_DATA)) {
+      (ALL_DATA[dc][model] || []).forEach(g =>
+        combined.push({ ...g, displayId: `${dcPrefix(dc)}-${g.id}` })
+      );
+    }
+    return combined;
+  }
+  return (ALL_DATA[currentDC]?.[model] || []).map(g => ({ ...g, displayId: g.id }));
+}
+
+// ════════════════════════════════════════════════════════════════
+// CHART
+// ════════════════════════════════════════════════════════════════
+function buildChart(canvasId, gpus, modelKey) {
+  if (charts[modelKey]) { charts[modelKey].destroy(); charts[modelKey] = null; }
+
+  const ctx = document.getElementById(canvasId).getContext('2d');
+  const labels = gpus.map(g => g.displayId);
+
+  charts[modelKey] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Original Cost',
+          data: gpus.map(g => g.original_cost),
+          backgroundColor: 'rgba(72,79,88,0.8)',
+          borderColor: '#484f58',
+          borderWidth: 1,
+          borderRadius: 3,
+        },
+        {
+          label: 'Secondary Market (NPV Sell)',
+          data: gpus.map(g => g.npv_sell),
+          backgroundColor: gpus.map(g =>
+            g.decision === 'SELL' ? 'rgba(63,185,80,1)' : 'rgba(35,134,54,0.82)'
+          ),
+          borderColor: '#3fb950',
+          borderWidth: 1,
+          borderRadius: 3,
+        },
+        {
+          label: 'Operational Value (NPV Keep)',
+          data: gpus.map(g => g.npv_keep),
+          backgroundColor: gpus.map(g =>
+            g.decision === 'SELL' ? 'rgba(248,81,73,0.65)' : 'rgba(31,111,235,0.82)'
+          ),
+          borderColor: gpus.map(g =>
+            g.decision === 'SELL' ? '#f85149' : '#388bfd'
+          ),
+          borderWidth: 1,
+          borderRadius: 3,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#161b22',
+          borderColor: '#30363d',
+          borderWidth: 1,
+          titleColor: '#e6edf3',
+          bodyColor: '#8b949e',
+          padding: 12,
+          callbacks: {
+            title: (items) => {
+              const g = gpus[items[0].dataIndex];
+              return `${g.displayId}  ·  ${g.profile}`;
+            },
+            label: (item) => `  ${item.dataset.label}: ${fmt(item.raw)}`,
+            afterBody: (items) => {
+              const g = gpus[items[0].dataIndex];
+              const depr = ((g.original_cost - g.npv_sell) / g.original_cost * 100).toFixed(1);
+              const gap  = g.npv_keep - g.npv_sell;
+              return [
+                '',
+                `  Health:       ${g.health_score}/100  (${g.health_grade})`,
+                `  Age:          ${g.age_months} months`,
+                `  Utilisation:  ${pct(g.utilization)}`,
+                `  Fail risk 90d: ${pct(g.failure_prob_90d)}`,
+                `  Depreciation: ${depr}%`,
+                `  NPV gap:      ${gap >= 0 ? '+' : ''}${fmt(gap)}`,
+                `  ► Decision:   ${g.decision}`,
+              ];
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(48,54,61,0.5)' },
+          ticks: { color: '#8b949e', font: { size: 10, family: 'monospace' } },
+        },
+        y: {
+          grid: { color: 'rgba(48,54,61,0.5)' },
+          border: { dash: [4, 4] },
+          ticks: {
+            color: '#8b949e',
+            font: { size: 10 },
+            callback: (v) => '$' + (v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v),
+          },
+        },
+      },
+    },
+  });
+}
+
+// ════════════════════════════════════════════════════════════════
+// GPU LIST
+// ════════════════════════════════════════════════════════════════
+function buildList(listId, gpus, modelKey) {
+  const container = document.getElementById(listId);
+  container.innerHTML = '';
+  gpus.forEach((gpu) => {
+    const item = document.createElement('div');
+    item.className = 'gpu-item' + (selected[modelKey]?.uuid === gpu.uuid ? ' selected' : '');
+    item.onclick = () => selectGPU(gpu, modelKey);
+    item.innerHTML = `
+      <div class="gpu-item-left">
+        <div class="health-dot ${gpu.health_grade}"></div>
+        <div>
+          <div class="gpu-id">${gpu.displayId}</div>
+          <div class="gpu-meta">${gpu.age_months}mo · ${gpu.profile}</div>
+        </div>
+      </div>
+      <div class="decision-badge ${gpu.decision}">${gpu.decision}</div>
+    `;
+    container.appendChild(item);
+  });
+}
+
+// ════════════════════════════════════════════════════════════════
+// PANEL STATS
+// ════════════════════════════════════════════════════════════════
+function buildStats(statsId, gpus) {
+  const el        = document.getElementById(statsId);
+  const sellCount = gpus.filter(g => g.decision === 'SELL').length;
+  const fleetVal  = gpus.reduce((s, g) => s + g.npv_sell, 0);
+  el.innerHTML = `
+    <div class="panel-stat">
+      <div class="panel-stat-label">Fleet Secondary Value</div>
+      <div class="panel-stat-value" style="color:var(--green)">${fmt(fleetVal)}</div>
+    </div>
+    <div class="panel-stat">
+      <div class="panel-stat-label">Sell Signals</div>
+      <div class="panel-stat-value" style="color:${sellCount > 0 ? 'var(--red)' : 'var(--text-muted)'}">
+        ${sellCount} / ${gpus.length}
+      </div>
+    </div>
+  `;
+}
+
+// ════════════════════════════════════════════════════════════════
+// DETAIL PANEL
+// ════════════════════════════════════════════════════════════════
+function showDetail(gpu, modelKey) {
+  const panel   = document.getElementById('detailPanel');
+  const isSell  = gpu.decision === 'SELL';
+  const deprPct = ((gpu.original_cost - gpu.npv_sell) / gpu.original_cost * 100).toFixed(1);
+  const sellPct = Math.round(gpu.npv_sell / gpu.original_cost * 100);
+  const keepPct = Math.round(gpu.npv_keep / gpu.original_cost * 100);
+  const gap     = gpu.npv_sell - gpu.npv_keep;
+  const model   = modelKey === 'a100' ? 'A100' : 'H100';
+
+  panel.classList.add('visible');
+
+  const badge = document.getElementById('dModelBadge');
+  badge.textContent = model;
+  badge.className   = `model-badge ${modelKey}`;
+
+  document.getElementById('dTitle').textContent = `${gpu.displayId}  —  ${gpu.profile}`;
+  const decBadge = document.getElementById('dDecisionBadge');
+  decBadge.textContent = gpu.decision;
+  decBadge.className   = `decision-badge ${gpu.decision}`;
+  document.getElementById('dUUID').textContent = gpu.uuid;
+
+  // Cards
+  document.getElementById('dOrigCost').textContent = fmt(gpu.original_cost);
+  document.getElementById('dOrigSub').textContent  = `New-market price when purchased  ·  ${gpu.age_months} months ago`;
+
+  document.getElementById('dNpvSell').textContent = fmt(gpu.npv_sell);
+  document.getElementById('dNpvSell').className   = 'detail-card-value green';
+  document.getElementById('dSellSub').textContent  = `${deprPct}% depreciation from original cost  ·  after 5% broker fee`;
+  const sellBar = document.getElementById('dSellBar');
+  sellBar.style.width = Math.min(sellPct, 100) + '%';
+  sellBar.className   = `bar-fill ${sellPct > 75 ? 'green' : sellPct > 45 ? 'amber' : 'red'}`;
+
+  document.getElementById('dNpvKeep').textContent = fmt(gpu.npv_keep);
+  document.getElementById('dNpvKeep').className   = `detail-card-value ${isSell ? 'red' : 'blue'}`;
+  document.getElementById('dKeepSub').textContent  = `12-month discounted operational value  ·  10% annual discount rate`;
+  const keepBar = document.getElementById('dKeepBar');
+  keepBar.style.width = Math.min(keepPct, 130) + '%';
+  keepBar.className   = `bar-fill ${keepPct > 100 ? 'green' : keepPct > 70 ? 'amber' : 'red'}`;
+
+  const healthEl = document.getElementById('dHealth');
+  healthEl.textContent = `${gpu.health_score} / 100`;
+  healthEl.className   = `detail-card-value ${gpu.health_score >= 85 ? 'green' : gpu.health_score >= 70 ? 'amber' : 'red'}`;
+  document.getElementById('dHealthSub').textContent =
+    `Grade: ${gpu.health_grade}  ·  Util: ${pct(gpu.utilization)}  ·  Fail risk (90d): ${pct(gpu.failure_prob_90d)}`;
+
+  // Reasoning
+  let text;
+  if (isSell) {
+    text = `<strong style="color:#f85149">⚠ SELL RECOMMENDED.</strong> ` +
+      `The secondary market value of <strong>${fmt(gpu.npv_sell)}</strong> exceeds the projected 12-month ` +
+      `operational NPV of <strong>${fmt(gpu.npv_keep)}</strong> by <strong>${fmt(Math.abs(gap))}</strong>. ` +
+      `With a ${pct(gpu.failure_prob_90d)} failure probability within 90 days, a health score of ${gpu.health_score}/100, ` +
+      `and utilisation of ${pct(gpu.utilization)}, the risk-adjusted future revenue stream can no longer justify ` +
+      `holding this asset. With secondary prices for ${model}s softening as Blackwell ramps, acting now captures ` +
+      `maximum residual value before further depreciation erodes it.`;
+  } else {
+    text = `<strong style="color:#3fb950">✓ KEEP RECOMMENDED.</strong> ` +
+      `The 12-month operational NPV of <strong>${fmt(gpu.npv_keep)}</strong> exceeds the current secondary ` +
+      `market value of <strong>${fmt(gpu.npv_sell)}</strong> by <strong>${fmt(Math.abs(gap))}</strong>. ` +
+      `At ${pct(gpu.utilization)} utilisation and only ${pct(gpu.failure_prob_90d)} failure risk over 90 days, ` +
+      `this GPU is generating more value in operation than you'd net from selling it today. ` +
+      `Continue monitoring — set a review trigger if health drops below 70 or utilisation falls under 60%.`;
+  }
+  document.getElementById('dReasoning').innerHTML = text;
+
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ════════════════════════════════════════════════════════════════
+// SELECTION
+// ════════════════════════════════════════════════════════════════
+function selectGPU(gpu, modelKey) {
+  // Toggle off if already selected
+  if (selected[modelKey]?.uuid === gpu.uuid) {
+    clearSelection(modelKey);
+    return;
+  }
+  selected[modelKey] = gpu;
+
+  // Highlight list item
+  const listId = modelKey === 'a100' ? 'a100List' : 'h100List';
+  const gpus   = getGPUs(modelKey);
+  document.querySelectorAll(`#${listId} .gpu-item`).forEach((el, i) => {
+    el.classList.toggle('selected', gpus[i]?.uuid === gpu.uuid);
+  });
+
+  // Show clear button
+  document.getElementById(`${modelKey}ClearBtn`).classList.add('visible');
+
+  // Rebuild chart with single GPU
+  buildChart(
+    modelKey === 'a100' ? 'a100Chart' : 'h100Chart',
+    [{ ...gpu }],
+    modelKey
+  );
+
+  showDetail(gpu, modelKey);
+}
+
+function clearSelection(modelKey) {
+  selected[modelKey] = null;
+  document.getElementById(`${modelKey}ClearBtn`).classList.remove('visible');
+
+  // Rebuild full chart
+  const gpus = getGPUs(modelKey);
+  buildChart(modelKey === 'a100' ? 'a100Chart' : 'h100Chart', gpus, modelKey);
+
+  // Deselect list items
+  const listId = modelKey === 'a100' ? 'a100List' : 'h100List';
+  document.querySelectorAll(`#${listId} .gpu-item`).forEach(el => el.classList.remove('selected'));
+
+  // Hide detail panel only if both cleared
+  if (!selected.a100 && !selected.h100) {
+    document.getElementById('detailPanel').classList.remove('visible');
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// REFRESH  —  called on DC change and init
+// ════════════════════════════════════════════════════════════════
+function refresh() {
+  selected = { a100: null, h100: null };
+  ['a100', 'h100'].forEach(mk => {
+    document.getElementById(`${mk}ClearBtn`).classList.remove('visible');
+  });
+  document.getElementById('detailPanel').classList.remove('visible');
+
+  const a100GPUs = getGPUs('a100');
+  const h100GPUs = getGPUs('h100');
+
+  buildChart('a100Chart', a100GPUs, 'a100');
+  buildChart('h100Chart', h100GPUs, 'h100');
+  buildList('a100List', a100GPUs, 'a100');
+  buildList('h100List', h100GPUs, 'h100');
+  buildStats('a100Stats', a100GPUs);
+  buildStats('h100Stats', h100GPUs);
+}
+
+function onDCChange() {
+  currentDC = document.getElementById('dcSelector').value;
+  refresh();
+}
+
+// ════════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════════
+refresh();
+
+setInterval(() => {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}, 1000);
+
+// ════════════════════════════════════════════════════════════════
+// AI MARKET INTELLIGENCE  —  streams from /api/v1/market-intelligence
+// ════════════════════════════════════════════════════════════════
+const MI_API = 'http://localhost:8000/api/v1/market-intelligence';
+
+async function loadMarketIntelligence() {
+  const body  = document.getElementById('marketIntelBody');
+  const meta  = document.getElementById('miMeta');
+  const t0    = Date.now();
+
+  try {
+    const resp = await fetch(MI_API);
+    if (!resp.ok) throw new Error(`API ${resp.status}: ${await resp.text()}`);
+
+    // Stream the response — Claude streams HTML <p> tags progressively
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let accumulated = '';
+
+    body.innerHTML = '<div class="mi-content" id="miContent"></div>';
+    const container = document.getElementById('miContent');
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      accumulated += decoder.decode(value, { stream: true });
+      // Render what we have so far (streaming partial HTML)
+      container.innerHTML = accumulated;
+    }
+
+    const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+    meta.textContent = `AI-generated · ${new Date().toLocaleTimeString('en-GB')} · ${elapsed}s`;
+
+  } catch (err) {
+    console.warn('Market intelligence API unavailable:', err);
+    // Fall back to static content gracefully
+    body.innerHTML = `
+      <div class="mi-content">
+        <p><strong>What is Secondary Market NPV?</strong><br>
+        Secondary market NPV is the net cash you'd receive selling a GPU today — through brokers,
+        data centre liquidators, or leasing companies — after a 5% transaction fee.
+        For A100s and H100s this market is liquid and price-efficient, creating a real
+        opportunity cost for every card you choose to keep running.</p>
+        <p><strong>Why A100 Prices Are Softening</strong><br>
+        With Blackwell (B200) ramping in 2025–26, hyperscalers are offloading H100 inventory — which
+        increases H100 secondary supply and compresses A100 demand further. A100s purchased 3+ years
+        ago at ~$15k are now clearing at $5–9k, a 40–66% depreciation.</p>
+        <p><strong>The Sell Signal Decision Logic</strong><br>
+        The economic engine computes three NPVs — Keep, Sell, Repurpose — and recommends whichever
+        is highest. A SELL flag fires when NPV(Sell) > NPV(Keep), driven by failure probability,
+        utilisation, or health grade. Acting early captures residual value.</p>
+      </div>`;
+    meta.textContent = 'static fallback (API unavailable)';
+  }
+}
+
+// Load on page open
+loadMarketIntelligence();
+
+</script>
+</body>
+</html>

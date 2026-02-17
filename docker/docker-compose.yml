@@ -223,6 +223,7 @@ services:
       DB_NAME: "gpu_health"
       DB_USER: "gpu_monitor"
       DB_PASSWORD: "gpu_monitor_secret"
+      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY}"
     networks:
       - gpu-monitor-net
 
