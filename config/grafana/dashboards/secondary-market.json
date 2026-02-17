@@ -1639,6 +1639,232 @@
         ]
       },
       "transparent": false
+    },
+    {
+      "id": 90,
+      "type": "row",
+      "title": "\ud83e\udd16 AI Market Intelligence",
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 37
+      },
+      "panels": []
+    },
+    {
+      "id": 91,
+      "type": "table",
+      "title": "\ud83d\udcc8 Current Market Dynamics",
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 0,
+        "y": 38
+      },
+      "options": {
+        "showHeader": false,
+        "cellHeight": "auto",
+        "footer": {
+          "show": false
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "P0D1C26D7DC78F49D"
+          },
+          "format": "table",
+          "rawSql": "SELECT content FROM v_latest_market_commentary WHERE section = 'market_dynamics'",
+          "refId": "A"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "extractFields",
+          "options": {
+            "source": "content"
+          }
+        }
+      ],
+      "pluginVersion": "10.0.0",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "wrap": true,
+            "displayMode": "auto",
+            "width": 700
+          },
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 92,
+      "type": "table",
+      "title": "\ud83d\udda5\ufe0f Fleet Analysis",
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 8,
+        "y": 38
+      },
+      "options": {
+        "showHeader": false,
+        "cellHeight": "auto",
+        "footer": {
+          "show": false
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "P0D1C26D7DC78F49D"
+          },
+          "format": "table",
+          "rawSql": "SELECT content FROM v_latest_market_commentary WHERE section = 'fleet_analysis'",
+          "refId": "A"
+        }
+      ],
+      "pluginVersion": "10.0.0",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "wrap": true,
+            "displayMode": "auto",
+            "width": 700
+          },
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 93,
+      "type": "table",
+      "title": "\ud83d\udd2d Forward View (3\u20136 months)",
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 8,
+        "x": 16,
+        "y": 38
+      },
+      "options": {
+        "showHeader": false,
+        "cellHeight": "auto",
+        "footer": {
+          "show": false
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "P0D1C26D7DC78F49D"
+          },
+          "format": "table",
+          "rawSql": "SELECT content FROM v_latest_market_commentary WHERE section = 'forward_view'",
+          "refId": "A"
+        }
+      ],
+      "pluginVersion": "10.0.0",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "wrap": true,
+            "displayMode": "auto",
+            "width": 700
+          },
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "text"
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 94,
+      "type": "stat",
+      "title": "Commentary Last Generated",
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 6,
+        "x": 0,
+        "y": 44
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "dateTimeFromNow",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": -3600
+              },
+              {
+                "color": "red",
+                "value": -86400
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "postgres",
+            "uid": "P0D1C26D7DC78F49D"
+          },
+          "format": "table",
+          "rawSql": "SELECT EXTRACT(EPOCH FROM MAX(generated_at)) * 1000 AS \"Generated At\"\nFROM gpu_market_commentary",
+          "refId": "A"
+        }
+      ],
+      "pluginVersion": "10.0.0"
     }
   ],
   "refresh": "5m",

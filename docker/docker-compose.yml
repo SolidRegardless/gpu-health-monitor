@@ -362,6 +362,7 @@ services:
       DB_USER: "gpu_monitor"
       DB_PASSWORD: "gpu_monitor_secret"
       FETCH_INTERVAL_HOURS: "6"
+      ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY}"
     networks:
       - gpu-monitor-net
 

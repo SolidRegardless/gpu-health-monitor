@@ -20,6 +20,7 @@ import time
 from datetime import datetime
 from typing import Optional, Tuple
 
+import anthropic
 import psycopg2
 import requests
 from bs4 import BeautifulSoup
@@ -283,6 +284,122 @@ def run_fetch_cycle(conn) -> None:
                      fb_h100["price_mid_usd"], fb_h100["original_cost_usd"], "fallback")
 
     log.info("=== Fetch cycle complete — next run in %.1f hours ===", FETCH_INTERVAL_HRS)
+
+    # Generate and store AI market commentary after each price fetch
+    generate_market_commentary(conn)
+
+
+# ─── AI Market Commentary ─────────────────────────────────────────────────────
+
+def generate_market_commentary(conn) -> None:
+    """
+    Pulls live prices + fleet data from DB, asks Claude to write three sections
+    of market intelligence, then stores them in gpu_market_commentary.
+    Falls back silently if ANTHROPIC_API_KEY is not set.
+    """
+    api_key = os.getenv("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        log.info("ANTHROPIC_API_KEY not set — skipping AI commentary")
+        return
+
+    log.info("Generating AI market commentary…")
+    try:
+        cursor = conn.cursor()
+
+        # Current prices
+        cursor.execute("""
+            SELECT model, price_low_usd, price_high_usd, price_mid_usd, original_cost_usd, source
+            FROM v_latest_market_prices WHERE condition = 'used_good' ORDER BY model
+        """)
+        prices = cursor.fetchall()
+
+        # Fleet decision summary
+        cursor.execute("""
+            SELECT decision, COUNT(*) as n,
+                   ROUND(AVG(health_score)::numeric,1) as avg_health,
+                   ROUND(AVG(npv_sell)::numeric,0) as avg_sell,
+                   ROUND(AVG(npv_keep)::numeric,0) as avg_keep
+            FROM v_latest_economic_decisions GROUP BY decision ORDER BY n DESC
+        """)
+        decisions = cursor.fetchall()
+
+        # Per-model breakdown
+        cursor.execute("""
+            SELECT a.model, COUNT(*) as total,
+                   SUM(CASE WHEN d.decision='sell'      THEN 1 ELSE 0 END) as sell_n,
+                   SUM(CASE WHEN d.decision='keep'      THEN 1 ELSE 0 END) as keep_n,
+                   SUM(CASE WHEN d.decision='repurpose' THEN 1 ELSE 0 END) as repur_n,
+                   ROUND(AVG(h.overall_score)::numeric,1) as avg_health
+            FROM gpu_assets a
+            JOIN v_latest_economic_decisions d ON a.gpu_uuid = d.gpu_uuid
+            JOIN (
+                SELECT DISTINCT ON (gpu_uuid) gpu_uuid, overall_score
+                FROM gpu_health_scores ORDER BY gpu_uuid, time DESC
+            ) h ON a.gpu_uuid = h.gpu_uuid
+            GROUP BY a.model ORDER BY a.model
+        """)
+        model_rows = cursor.fetchall()
+
+        price_txt = "\n".join(
+            f"  {r[0]}: ${r[1]:,.0f}–${r[2]:,.0f} (mid ${r[3]:,.0f}), original ${r[4]:,.0f}, src={r[5]}"
+            for r in prices
+        ) or "  No price data yet."
+
+        decision_txt = "\n".join(
+            f"  {r[0].upper()}: {r[1]} GPU(s), avg health {r[2]}/100, avg NPV sell ${r[3]:,.0f}, keep ${r[4]:,.0f}"
+            for r in decisions
+        ) or "  No decision data yet."
+
+        model_txt = "\n".join(
+            f"  {r[0]}: {r[1]} units, avg health {r[5]}/100 [KEEP:{r[3]} SELL:{r[2]} REPURPOSE:{r[4]}]"
+            for r in model_rows
+        ) or "  No model data yet."
+
+        prompt = f"""You are a GPU fleet economics analyst. Write exactly three short paragraphs for a live dashboard.
+
+Live data ({datetime.utcnow().strftime('%d %b %Y %H:%M UTC')}):
+Secondary market prices:
+{price_txt}
+Fleet decisions:
+{decision_txt}
+Model breakdown:
+{model_txt}
+
+Write three paragraphs, each 2-4 sentences. Plain text only — no markdown, no bullet points, no headings.
+Paragraph 1: Current secondary market dynamics (reference the actual prices, Blackwell ramp, supply/demand).
+Paragraph 2: What the fleet NPV data reveals — interpret the KEEP/SELL/REPURPOSE split and health scores.
+Paragraph 3: Forward-looking view — what the operator should watch over the next 3–6 months.
+Be commercially sharp and reference the specific numbers from the data above."""
+
+        client = anthropic.Anthropic(api_key=api_key)
+        message = client.messages.create(
+            model="claude-3-5-haiku-20241022",
+            max_tokens=600,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        full_text = message.content[0].text.strip()
+
+        # Split into 3 paragraphs
+        paragraphs = [p.strip() for p in full_text.split("\n\n") if p.strip()]
+        sections = ["market_dynamics", "fleet_analysis", "forward_view"]
+
+        for i, section in enumerate(sections):
+            content = paragraphs[i] if i < len(paragraphs) else paragraphs[-1] if paragraphs else "No data."
+            cursor.execute("""
+                INSERT INTO gpu_market_commentary (generated_at, section, content, model_used)
+                VALUES (NOW(), %s, %s, %s)
+                ON CONFLICT (generated_at, section) DO NOTHING
+            """, (section, content, "claude-3-5-haiku-20241022"))
+
+        conn.commit()
+        log.info("AI commentary written to gpu_market_commentary (%d sections)", len(sections))
+
+    except Exception as exc:
+        log.error("Failed to generate AI commentary: %s", exc, exc_info=True)
+        try:
+            conn.rollback()
+        except Exception:
+            pass
 
 
 # ─── Entry point ─────────────────────────────────────────────────────────────
