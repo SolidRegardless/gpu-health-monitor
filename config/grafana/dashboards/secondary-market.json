@@ -1655,24 +1655,17 @@
     },
     {
       "id": 91,
-      "type": "table",
       "title": "\ud83d\udcc8 Current Market Dynamics",
-      "datasource": {
-        "type": "postgres",
-        "uid": "P0D1C26D7DC78F49D"
-      },
+      "type": "stat",
       "gridPos": {
         "h": 6,
         "w": 8,
         "x": 0,
         "y": 38
       },
-      "options": {
-        "showHeader": false,
-        "cellHeight": "auto",
-        "footer": {
-          "show": false
-        }
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
       },
       "targets": [
         {
@@ -1681,54 +1674,53 @@
             "uid": "P0D1C26D7DC78F49D"
           },
           "format": "table",
-          "rawSql": "SELECT content FROM v_latest_market_commentary WHERE section = 'market_dynamics'",
+          "rawSql": "SELECT content::text AS \"value\" FROM v_latest_market_commentary WHERE section = 'market_dynamics'",
           "refId": "A"
         }
       ],
-      "transformations": [
-        {
-          "id": "extractFields",
-          "options": {
-            "source": "content"
-          }
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^value$/",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "value",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "text": {
+          "valueSize": 14
         }
-      ],
-      "pluginVersion": "10.0.0",
+      },
       "fieldConfig": {
         "defaults": {
-          "custom": {
-            "wrap": true,
-            "displayMode": "auto",
-            "width": 700
-          },
           "color": {
             "mode": "fixed",
             "fixedColor": "text"
-          }
+          },
+          "custom": {},
+          "noValue": "Loading commentary..."
         },
         "overrides": []
-      }
+      },
+      "transformations": []
     },
     {
       "id": 92,
-      "type": "table",
       "title": "\ud83d\udda5\ufe0f Fleet Analysis",
-      "datasource": {
-        "type": "postgres",
-        "uid": "P0D1C26D7DC78F49D"
-      },
+      "type": "stat",
       "gridPos": {
         "h": 6,
         "w": 8,
         "x": 8,
         "y": 38
       },
-      "options": {
-        "showHeader": false,
-        "cellHeight": "auto",
-        "footer": {
-          "show": false
-        }
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
       },
       "targets": [
         {
@@ -1737,46 +1729,53 @@
             "uid": "P0D1C26D7DC78F49D"
           },
           "format": "table",
-          "rawSql": "SELECT content FROM v_latest_market_commentary WHERE section = 'fleet_analysis'",
+          "rawSql": "SELECT content::text AS \"value\" FROM v_latest_market_commentary WHERE section = 'fleet_analysis'",
           "refId": "A"
         }
       ],
-      "pluginVersion": "10.0.0",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^value$/",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "value",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "text": {
+          "valueSize": 14
+        }
+      },
       "fieldConfig": {
         "defaults": {
-          "custom": {
-            "wrap": true,
-            "displayMode": "auto",
-            "width": 700
-          },
           "color": {
             "mode": "fixed",
             "fixedColor": "text"
-          }
+          },
+          "custom": {},
+          "noValue": "Loading commentary..."
         },
         "overrides": []
-      }
+      },
+      "transformations": []
     },
     {
       "id": 93,
-      "type": "table",
       "title": "\ud83d\udd2d Forward View (3\u20136 months)",
-      "datasource": {
-        "type": "postgres",
-        "uid": "P0D1C26D7DC78F49D"
-      },
+      "type": "stat",
       "gridPos": {
         "h": 6,
         "w": 8,
         "x": 16,
         "y": 38
       },
-      "options": {
-        "showHeader": false,
-        "cellHeight": "auto",
-        "footer": {
-          "show": false
-        }
+      "datasource": {
+        "type": "postgres",
+        "uid": "P0D1C26D7DC78F49D"
       },
       "targets": [
         {
@@ -1785,25 +1784,39 @@
             "uid": "P0D1C26D7DC78F49D"
           },
           "format": "table",
-          "rawSql": "SELECT content FROM v_latest_market_commentary WHERE section = 'forward_view'",
+          "rawSql": "SELECT content::text AS \"value\" FROM v_latest_market_commentary WHERE section = 'forward_view'",
           "refId": "A"
         }
       ],
-      "pluginVersion": "10.0.0",
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "/^value$/",
+          "values": false
+        },
+        "orientation": "auto",
+        "textMode": "value",
+        "colorMode": "none",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "text": {
+          "valueSize": 14
+        }
+      },
       "fieldConfig": {
         "defaults": {
-          "custom": {
-            "wrap": true,
-            "displayMode": "auto",
-            "width": 700
-          },
           "color": {
             "mode": "fixed",
             "fixedColor": "text"
-          }
+          },
+          "custom": {},
+          "noValue": "Loading commentary..."
         },
         "overrides": []
-      }
+      },
+      "transformations": []
     },
     {
       "id": 94,
