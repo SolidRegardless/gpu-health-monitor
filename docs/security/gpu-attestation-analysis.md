@@ -1,8 +1,8 @@
 # Formal Technical Analysis: GPU Identity Attestation and Cryptographic Verification for A100 and H100 Architectures
 
-**Document Classification:** Technical Reference
-**Version:** 1.2
-**Date:** February 2026
+**Document Classification:** Technical Reference  
+**Version:** 1.0  
+**Date:** February 2026  
 **Subject:** Hardware-Rooted Attestation of NVIDIA A100 and H100 GPUs with Application to Distributed Compute and Blockchain Workloads
 
 ---
@@ -71,7 +71,7 @@ The following diagram illustrates the high-level landscape of GPU attestation, f
 
 ```mermaid
 flowchart TD
-    subgraph HW["Hardware Layer"]
+    subgraph HW["1 · Hardware Layer"]
         GPU["GPU Die\n(H100 / A100)"]
         FUSE["eFuse Bank\n(Device Identity Keys)"]
         SE["Security Engine\n(H100 only)"]
@@ -79,7 +79,7 @@ flowchart TD
         GPU --- SE
     end
 
-    subgraph SW["System Software Layer"]
+    subgraph SW["2 · System Software Layer"]
         DRIVER["NVIDIA Driver\n(GPU-CC kernel module)"]
         CCLIB["CC SDK / nvTrust Library"]
         VIRT["Hypervisor / VFIO\n(Optional)"]
@@ -87,14 +87,14 @@ flowchart TD
         DRIVER --- VIRT
     end
 
-    subgraph TEE["Trusted Execution Environment"]
+    subgraph TEE["3 · Trusted Execution Environment"]
         CPUTEE["CPU TEE\n(Intel TDX / AMD SEV-SNP)"]
         GPUTEE["GPU TEE\n(H100 CC Mode)"]
         CPUTEE <-->|"Encrypted PCIe\n(AES-256-GCM)"| GPUTEE
     end
 
-    subgraph VERIF["Remote Verification"]
-        OCSP["NVIDIA OCSP Service\n(Certificate Validation)"]
+    subgraph VERIF["4 · Remote Verification"]
+        OCSP["NVIDIA OCSP\n(Certificate Validation)"]
         RIM["Reference Integrity\nManifest (RIM)"]
         VERIFIER["Remote Verifier\n(Client / Smart Contract)"]
         OCSP --- VERIFIER
@@ -103,6 +103,7 @@ flowchart TD
 
     HW --> SW
     SW --> TEE
+    TEE --> VERIF
     SE -->|"Signed Attestation Report"| VERIFIER
     VERIFIER -->|"Nonce / Challenge"| CCLIB
 ```
